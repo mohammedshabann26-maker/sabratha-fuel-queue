@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>قوائم تعبئة صبراتة</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛽</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<!-- Firebase (free tier) — real-time shared database for the queues -->
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+
+<style>
+  :root{
+    --bg:#F5EFE2;
+    --surface:#FFFDF8;
+    --surface-2:#EFE7D6;
+    --ink:#1C2B33;
+    --ink-dim:#5B6B72;
+    --line:#DCD2BC;
+    --accent:#D9812C;
+    --accent-ink:#5A3311;
+    --accent-2:#12545A;
+    --accent-2-ink:#EAF6F5;
+    --success:#2F8F5B;
+    --success-bg:#E4F3EA;
+    --warning:#B9790A;
+    --warning-bg:#FBF0DA;
+    --danger:#B5402A;
+    --danger-bg:#FBE7E1;
+    --shadow: 0 18px 40px -20px rgba(20,30,25,.35);
+    --radius: 16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10181A; --surface:#182427; --surface-2:#1F2C2F; --ink:#EDE6D8; --ink-dim:#9FB0B0;
+      --line:#2B3A3D; --accent:#F0A63D; --accent-ink:#2A1804; --accent-2:#3FAEB2; --accent-2-ink:#06201F;
+      --success:#49B57C; --success-bg:#123024; --warning:#E8B23D; --warning-bg:#332405;
+      --danger:#E2705A; --danger-bg:#391712; --shadow: 0 18px 40px -20px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10181A; --surface:#182427; --surface-2:#1F2C2F; --ink:#EDE6D8; --ink-dim:#9FB0B0;
+    --line:#2B3A3D; --accent:#F0A63D; --accent-ink:#2A1804; --accent-2:#3FAEB2; --accent-2-ink:#06201F;
+    --success:#49B57C; --success-bg:#123024; --warning:#E8B23D; --warning-bg:#332405;
+    --danger:#E2705A; --danger-bg:#391712; --shadow: 0 18px 40px -20px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box;}
+  html{background:var(--bg);}
+  body{
+    margin:0;direction:rtl;background:var(--bg);color:var(--ink);
+    font-family:'Tajawal',system-ui,sans-serif;line-height:1.65;
+  }
+  h1,h2,h3,.display{font-family:'Cairo',system-ui,sans-serif;text-wrap:balance;margin:0;}
+  .tabular{font-variant-numeric:tabular-nums;}
+  a{color:inherit;}
+  button{font-family:inherit;}
+  img,svg{max-width:100%;}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+
+  .topbar{
+    position:sticky;top:0;z-index:40;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:1080px;margin:0 auto;padding:12px 20px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:38px;height:38px;border-radius:11px;background:linear-gradient(155deg,var(--accent),#a85e14);
+    display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);flex:none;
+  }
+  .brand-mark svg{width:20px;height:20px;}
+  .brand-text{display:flex;flex-direction:column;line-height:1.2;}
+  .brand-text b{font-family:'Cairo';font-size:16px;font-weight:800;}
+  .brand-text span{font-size:11px;color:var(--ink-dim);}
+
+  .cs-badge{
+    display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);
+    padding:6px 12px 6px 6px;border-radius:999px;cursor:pointer;transition:.15s;text-decoration:none;color:var(--ink);
+  }
+  .cs-badge:hover{border-color:var(--accent);}
+  .cs-mono{
+    width:26px;height:26px;border-radius:8px;background:linear-gradient(155deg,var(--accent-2),#0c3a3f);
+    color:var(--accent-2-ink);display:flex;align-items:center;justify-content:center;
+    font-family:'Cairo';font-weight:800;font-size:11.5px;flex:none;
+  }
+  .cs-badge-text{display:flex;flex-direction:column;line-height:1.15;}
+  .cs-badge-text b{font-family:'Cairo';font-size:11.5px;font-weight:800;}
+  .cs-badge-text span{font-size:9.5px;color:var(--accent);font-weight:800;}
+
+  .route-pill{
+    display:none;align-items:center;gap:8px;font-size:12.5px;font-weight:800;
+    padding:8px 14px;border-radius:999px;
+  }
+  #app[data-local-route="security"][data-local-auth="security"] .route-pill.for-security{display:flex;background:var(--accent-2);color:var(--accent-2-ink);}
+  #app[data-local-route="owner"] .route-pill.for-owner{display:flex;background:var(--surface-2);color:var(--ink-dim);border:1px solid var(--line);}
+  .route-pill button{
+    background:none;border:none;color:inherit;font-family:inherit;font-weight:800;font-size:11.5px;
+    cursor:pointer;text-decoration:underline;padding:0;opacity:.85;
+  }
+
+  .live-badge{
+    display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--ink-dim);
+    border:1px solid var(--line);background:var(--surface);padding:6px 11px;border-radius:999px;
+  }
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex:none;animation:livepulse 1.8s ease-in-out infinite;}
+  @keyframes livepulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--success) 45%, transparent);}50%{box-shadow:0 0 0 5px transparent;}}
+  @media (prefers-reduced-motion:reduce){ .live-dot{animation:none;} }
+  #app[data-local-route="security"] .live-badge{display:none;}
+  #app[data-local-route="security"][data-local-auth="security"] .live-badge{display:flex;}
+
+  .hero{padding:56px 0 40px;overflow:hidden;position:relative;}
+  .hero::before{
+    content:"";position:absolute;inset:-20% -10% auto -10%;height:520px;z-index:-1;
+    background:radial-gradient(closest-side, color-mix(in srgb, var(--accent) 14%, transparent), transparent 72%);
+    pointer-events:none;
+  }
+  .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center;}
+  @media (max-width:860px){.hero-grid{grid-template-columns:1fr;}}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);
+    padding:6px 14px;border-radius:999px;font-size:12.5px;color:var(--ink-dim);font-weight:700;margin-bottom:18px;
+  }
+  .eyebrow b{color:var(--accent-2);}
+  .hero h1{font-size:clamp(28px,4.4vw,42px);font-weight:800;letter-spacing:-.01em;}
+  .hero h1 em{font-style:normal;color:var(--accent-2);}
+  .hero p.lead{margin-top:16px;font-size:16.5px;color:var(--ink-dim);max-width:46ch;}
+  .hero-actions{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap;}
+  .btn{
+    border:none;border-radius:12px;padding:13px 22px;font-weight:800;font-size:14.5px;
+    cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s transform,.15s box-shadow;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 12px 26px -12px rgba(217,129,44,.55);}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line);}
+
+  .rule-banner{
+    margin-top:28px;display:flex;gap:12px;align-items:flex-start;background:var(--danger-bg);
+    border:1px solid color-mix(in srgb, var(--danger) 35%, var(--line));padding:14px 16px;border-radius:14px;
+    font-size:13.5px;color:var(--ink);
+  }
+  .rule-banner b{color:var(--danger);}
+
+  .scene-stage{perspective:1100px;height:340px;display:flex;align-items:center;justify-content:center;position:relative;}
+  .ground{
+    position:absolute;bottom:18px;width:220px;height:34px;border-radius:50%;
+    background:radial-gradient(closest-side, rgba(0,0,0,.28), transparent 75%);filter:blur(2px);
+  }
+  @media (prefers-color-scheme: dark){ .ground{background:radial-gradient(closest-side, rgba(0,0,0,.55), transparent 75%);} }
+  .rig{
+    width:150px;height:190px;position:relative;transform-style:preserve-3d;
+    transform:rotateX(-14deg) rotateY(28deg);animation:spin 14s linear infinite;
+  }
+  @media (prefers-reduced-motion:reduce){ .rig{animation:none;} }
+  @keyframes spin{ to{ transform:rotateX(-14deg) rotateY(388deg);} }
+  .face{position:absolute;border:1px solid rgba(0,0,0,.15);}
+  .can-body{width:120px;height:150px;left:15px;top:30px;}
+  .can-front{background:linear-gradient(180deg,#EB9A3D,#C97418);transform:translateZ(30px);border-radius:8px;}
+  .can-back{background:#9C5A10;transform:translateZ(-30px) rotateY(180deg);border-radius:8px;}
+  .can-left{width:60px;height:150px;left:45px;top:30px;background:#B4650F;transform:rotateY(-90deg) translateZ(60px);border-radius:8px;}
+  .can-right{width:60px;height:150px;left:45px;top:30px;background:#B4650F;transform:rotateY(90deg) translateZ(60px);border-radius:8px;}
+  .can-top{width:120px;height:60px;left:15px;top:75px;background:#F4B15B;transform:rotateX(90deg) translateZ(75px);border-radius:8px;}
+  .can-bottom{width:120px;height:60px;left:15px;top:75px;background:#7A430A;transform:rotateX(-90deg) translateZ(75px);}
+  .can-label{
+    position:absolute;left:33px;top:66px;width:84px;height:56px;transform:translateZ(31px);
+    background:rgba(255,253,248,.94);border-radius:6px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2px;box-shadow:0 2px 6px rgba(0,0,0,.2);
+  }
+  .can-label b{font-family:'Cairo';font-size:20px;color:#12545A;line-height:1;}
+  .can-label span{font-size:9px;color:#5B6B72;font-weight:700;}
+  .can-handle{
+    position:absolute;left:58px;top:-8px;width:34px;height:18px;transform:translateZ(31px);
+    border:7px solid #7A430A;border-bottom:none;border-radius:14px 14px 0 0;
+  }
+  .can-ribs{position:absolute;left:33px;top:16px;width:84px;height:34px;transform:translateZ(31px);display:flex;flex-direction:column;justify-content:space-between;}
+  .can-ribs i{display:block;height:2px;background:rgba(0,0,0,.12);border-radius:2px;}
+  .can-spout-mount{
+    position:absolute;left:100px;top:6px;width:20px;height:20px;background:#C97418;
+    transform:translateZ(30px);border-radius:5px 5px 2px 2px;border:1px solid rgba(0,0,0,.15);
+  }
+  .can-spout{
+    position:absolute;left:114px;top:-18px;width:11px;height:30px;background:#7A430A;
+    transform:translateZ(30px) rotate(-24deg);border-radius:5px;transform-origin:bottom center;
+  }
+  .can-cap{
+    position:absolute;left:110px;top:-26px;width:19px;height:10px;background:#5C3208;
+    transform:translateZ(30px) rotate(-24deg);border-radius:4px;transform-origin:bottom center;
+  }
+  .drop{
+    position:absolute;width:8px;height:11px;background:var(--accent);border-radius:50% 50% 50% 0;
+    transform:rotate(45deg);opacity:0;animation:drop 3.2s ease-in infinite;
+  }
+  @media (prefers-reduced-motion:reduce){ .drop{animation:none;opacity:0;} }
+  .drop.d1{left:calc(50% + 66px);top:56%;animation-delay:.2s;}
+  .drop.d2{left:calc(50% + 74px);top:56%;animation-delay:1.6s;}
+  @keyframes drop{
+    0%{opacity:0;transform:translateY(0) rotate(45deg);} 12%{opacity:.9;} 70%{opacity:.7;}
+    100%{opacity:0;transform:translateY(50px) rotate(45deg);}
+  }
+
+  section{padding:34px 0;}
+  .section-head{margin-bottom:20px;}
+  .section-head .kicker{font-size:12.5px;font-weight:800;color:var(--accent-2);letter-spacing:.03em;}
+  .section-head h2{font-size:23px;margin-top:6px;}
+  .section-head p{color:var(--ink-dim);font-size:14.5px;margin-top:6px;max-width:60ch;}
+
+  .rules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media (max-width:760px){.rules-grid{grid-template-columns:1fr;}}
+  .rule-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;}
+  .rule-card .num{
+    width:30px;height:30px;border-radius:9px;background:var(--surface-2);display:flex;align-items:center;
+    justify-content:center;font-family:'Cairo';font-weight:800;color:var(--accent-2);margin-bottom:10px;font-size:13px;
+  }
+  .rule-card h3{font-size:15px;margin-bottom:6px;}
+  .rule-card p{font-size:13.5px;color:var(--ink-dim);margin:0;}
+
+  .stations-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .stats-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .stat-pill{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 14px;
+    font-size:12.5px;color:var(--ink-dim);display:flex;gap:8px;align-items:baseline;
+  }
+  .stat-pill b{font-family:'Cairo';font-size:16px;color:var(--ink);}
+
+  .add-station-form{
+    display:none;gap:10px;background:var(--surface-2);border:1px dashed var(--line);
+    border-radius:14px;padding:14px;margin-bottom:18px;flex-wrap:wrap;
+  }
+  #app[data-local-auth="security"] .add-station-form{display:flex;}
+  .security-only{display:none;}
+  #app[data-local-auth="security"] .security-only.flex{display:flex;}
+  #app[data-local-auth="security"] .security-only.grid-actions{display:grid;}
+
+  #app[data-local-route="security"] .public-route-only,
+  #app[data-local-route="owner"] .public-route-only{display:none;}
+  .security-chrome, .owner-chrome{display:none;}
+  #app[data-local-route="security"] .security-chrome{display:block;}
+  #app[data-local-route="owner"] .owner-chrome{display:block;}
+  #app[data-local-route="security"] #stations-section-head,
+  #app[data-local-route="owner"] #stations-section-head{display:none;}
+  #app[data-local-route="owner"] #stats-toolbar{display:none;}
+
+  .locked-screen{display:none;min-height:70vh;align-items:center;justify-content:center;padding:40px 20px;text-align:center;}
+  #app[data-local-route="security"] .locked-screen{display:flex;}
+  #app[data-local-route="security"][data-local-auth="security"] .locked-screen{display:none;}
+  #app[data-local-route="security"] .security-below-lock{display:none;}
+  #app[data-local-route="security"][data-local-auth="security"] .security-below-lock{display:block;}
+
+  .stations{display:grid;grid-template-columns:1fr;gap:18px;}
+  .station-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;}
+  .station-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;
+    border-bottom:1px solid var(--line);flex-wrap:wrap;
+  }
+  .station-title{display:flex;align-items:center;gap:10px;}
+  .station-icon{
+    width:38px;height:38px;border-radius:10px;background:var(--accent-2);color:var(--accent-2-ink);
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .station-name{font-family:'Cairo';font-weight:800;font-size:16px;}
+  .station-note{font-size:12px;color:var(--ink-dim);}
+  .station-status{font-size:12px;font-weight:800;padding:6px 12px;border-radius:999px;}
+  .station-status[data-active="1"]{background:var(--success-bg);color:var(--success);}
+  .station-status[data-active="0"]{background:var(--surface-2);color:var(--ink-dim);}
+
+  .station-body{padding:16px 18px;}
+  .queue-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .queue-empty{font-size:13px;color:var(--ink-dim);text-align:center;padding:18px 0;border:1px dashed var(--line);border-radius:12px;}
+  .queue-row{
+    display:grid;grid-template-columns:26px 1fr auto auto;align-items:center;gap:10px;
+    background:var(--surface-2);border-radius:12px;padding:9px 12px;
+  }
+  .queue-row .pos{font-family:'Cairo';font-weight:800;font-size:13px;color:var(--ink-dim);text-align:center;}
+  .queue-row .who{display:flex;flex-direction:column;gap:1px;min-width:0;}
+  .queue-row .who .name{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .queue-row .who .plate{font-size:12px;color:var(--ink-dim);}
+  .queue-row .transit-tag{
+    font-size:10.5px;font-weight:800;color:var(--accent-2);background:color-mix(in srgb, var(--accent-2) 12%, transparent);
+    padding:2px 7px;border-radius:999px;width:fit-content;margin-top:2px;
+  }
+  .status-badge{font-size:11.5px;font-weight:800;padding:6px 10px;border-radius:999px;white-space:nowrap;}
+  .status-badge[data-status="waiting"]{background:var(--warning-bg);color:var(--warning);}
+  .status-badge[data-status="called"]{background:var(--accent-2);color:var(--accent-2-ink);}
+  .status-badge[data-status="done"]{background:var(--success-bg);color:var(--success);}
+  .status-badge[data-status="cancelled"]{background:var(--danger-bg);color:var(--danger);}
+
+  .row-actions{display:flex;gap:6px;}
+  .icon-btn{
+    width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:var(--surface);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);
+  }
+  .icon-btn:hover{border-color:var(--accent-2);}
+  .icon-btn.danger:hover{border-color:var(--danger);color:var(--danger);}
+
+  .register-form{display:grid;grid-template-columns:1.4fr 1fr auto;gap:8px;align-items:end;border-top:1px solid var(--line);padding-top:14px;}
+  @media (max-width:600px){.register-form{grid-template-columns:1fr;}}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:11.5px;color:var(--ink-dim);font-weight:700;}
+  .field input{
+    border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;
+    padding:10px 12px;font-size:13.5px;font-family:inherit;
+  }
+  .field input:focus{outline:2px solid var(--accent-2);outline-offset:1px;}
+  .transit-check{grid-column:1/-1;display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-dim);margin-top:2px;}
+  .register-form button{height:41px;white-space:nowrap;}
+
+  .station-manage{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,auto));gap:8px;padding:12px 18px;
+    border-top:1px solid var(--line);background:var(--surface-2);
+  }
+  .manage-btn{
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;
+    padding:8px 12px;font-size:12.5px;font-weight:700;cursor:pointer;
+  }
+  .manage-btn.danger{color:var(--danger);border-color:color-mix(in srgb, var(--danger) 40%, var(--line));}
+  .manage-btn.primary{background:var(--accent-2);color:var(--accent-2-ink);border-color:var(--accent-2);}
+
+  .stations-empty{text-align:center;padding:40px 20px;border:1px dashed var(--line);border-radius:20px;color:var(--ink-dim);}
+
+  .station-metrics{
+    display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line);
+    background:color-mix(in srgb, var(--surface-2) 55%, transparent);
+  }
+  .metric-pill{
+    display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--ink-dim);
+    background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 11px;
+  }
+  .metric-pill b{font-family:'Cairo';font-size:14px;color:var(--ink);font-weight:800;}
+  .metric-pill.mp-waiting b{color:var(--warning);}
+  .metric-pill.mp-called b{color:var(--accent-2);}
+  .metric-pill.mp-served b{color:var(--success);}
+  .metric-pill.mp-transit b{color:var(--accent);}
+
+  .reports-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .reports-panel{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;margin-bottom:18px;box-shadow:var(--shadow);
+  }
+  .reports-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .reports-panel-head h3{font-size:16px;}
+  .reports-panel-head p{font-size:12.5px;color:var(--ink-dim);margin-top:4px;}
+  .reports-table-wrap{overflow-x:auto;}
+  .reports-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px;}
+  .reports-table th,.reports-table td{padding:9px 10px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap;}
+  .reports-table th{color:var(--ink-dim);font-weight:800;font-size:11.5px;}
+  .reports-table td:first-child,.reports-table th:first-child{text-align:right;}
+  .reports-table tbody tr:hover{background:var(--surface-2);}
+  .reports-table tfoot td{font-weight:800;font-family:'Cairo';background:var(--surface-2);}
+  .reports-status-tag{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:999px;}
+  .reports-status-tag[data-active="1"]{background:var(--success-bg);color:var(--success);}
+  .reports-status-tag[data-active="0"]{background:var(--surface-2);color:var(--ink-dim);}
+
+  @media print{
+    .topbar,.hero,#rules,.locked-screen,.stations-toolbar,.add-station-form,
+    .security-chrome > .wrap > div:last-child,.reports-toolbar,.register-form,
+    .station-manage,.row-actions,.toast,footer,section:not(#stations){display:none !important;}
+    body{background:#fff;}
+    .reports-panel,.station-card{box-shadow:none;border:1px solid #999;}
+  }
+
+  .gate-card{
+    background:var(--surface);border-radius:18px;padding:22px;max-width:340px;width:100%;
+    box-shadow:var(--shadow);border:1px solid var(--line);
+  }
+  .gate-card h3{font-size:16px;margin-bottom:6px;}
+  .gate-card p{font-size:13px;color:var(--ink-dim);margin:0 0 14px;}
+  .gate-card input{
+    width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);
+    border-radius:10px;padding:11px 12px;font-size:14px;margin-bottom:10px;font-family:inherit;
+  }
+  .gate-error{color:var(--danger);font-size:12.5px;display:none;margin:-4px 0 8px;}
+
+  .soon-card{
+    display:flex;align-items:center;gap:22px;background:linear-gradient(135deg,var(--accent-2),#0b3236);
+    color:var(--accent-2-ink);border-radius:22px;padding:28px 30px;box-shadow:var(--shadow);flex-wrap:wrap;
+  }
+  .soon-mono{
+    width:66px;height:66px;border-radius:18px;background:rgba(255,255,255,.14);display:flex;
+    align-items:center;justify-content:center;font-family:'Cairo';font-weight:800;font-size:24px;
+    flex:none;border:1px solid rgba(255,255,255,.25);
+  }
+  .soon-copy{flex:1;min-width:220px;}
+  .soon-kicker{font-size:12px;font-weight:800;opacity:.8;letter-spacing:.03em;margin-bottom:4px;}
+  .soon-copy h2{font-size:24px;color:inherit;}
+  .soon-copy p{font-size:13.5px;margin-top:8px;opacity:.92;max-width:60ch;}
+  .soon-copy b{color:inherit;}
+
+  footer{border-top:1px solid var(--line);padding:30px 0 40px;margin-top:20px;}
+  .footer-grid{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--ink-dim);}
+  .footer-grid b{color:var(--ink);}
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:999px;
+    font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:90;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .config-warning{
+    background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);border-radius:12px;
+    padding:16px;margin:16px 20px;font-size:13.5px;font-weight:700;text-align:center;
+  }
+</style>
+</head>
+<body>
+<div id="app" data-local-route="public" data-local-auth="">
+
+  <div id="config-warning-slot"></div>
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M6 20V6a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v14" stroke="#2A1804" stroke-width="1.8" stroke-linecap="round"/><path d="M6 20h9M15 10l2.5 2.2V17a1.6 1.6 0 0 0 3.2 0v-6.4L18 8" stroke="#2A1804" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 8h4" stroke="#2A1804" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div class="brand-text">
+          <b>قوائم تعبئة صبراتة</b>
+          <span>بادرة خير من فريق سيتي شوب</span>
+        </div>
+      </div>
+
+      <div class="route-pill for-security">
+        🛡️ لوحة مديرية الأمن
+        <button type="button" id="security-logout">خروج</button>
+      </div>
+      <div class="route-pill for-owner">👁️ عرض صاحب المحطة — للاطّلاع فقط</div>
+
+      <div class="live-badge" id="live-badge"><span class="live-dot"></span> بيانات لحظية مباشرة</div>
+
+      <a class="cs-badge public-route-only" href="#coming-soon">
+        <span class="cs-mono">CS</span>
+        <span class="cs-badge-text"><b>سيتي شوب</b><span>قريباً</span></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="locked-screen">
+    <div class="gate-card" style="max-width:360px;">
+      <h3>🛡️ لوحة تحكم مديرية الأمن</h3>
+      <p>هذه الصفحة خاصة بأعضاء اللجنة المسؤولين عن متابعة قوائم التعبئة في صبراتة. الرجاء إدخال الرمز الخاص للمتابعة.</p>
+      <div class="gate-error" id="gate-error-locked">الرمز غير صحيح، حاول مجدداً.</div>
+      <input type="password" id="gate-input-locked" placeholder="أدخل رمز مديرية الأمن">
+      <button type="button" class="btn btn-primary" id="gate-submit-locked" style="width:100%;">دخول</button>
+    </div>
+  </div>
+
+  <header class="hero public-route-only">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow">🛡️ بإشراف <b>لجنة متابعة تابعة لمديرية أمن صبراتة</b></div>
+        <h1>طابورك محفوظ <em>بالاسم</em>، لا بالانتظار أمام المحطة</h1>
+        <p class="lead">
+          نظام بسيط لتنظيم تعبئة الوقود في صبراتة: تسجّل اسمك ولوحة سيارتك عند وصول أي طلبية،
+          وتُستدعى آليتك في دورها — دون ازدحام ولا فوضى ولا مبيت أمام المحطات.
+        </p>
+        <div class="hero-actions">
+          <a href="#stations" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+            سجّل اسمك في القائمة
+          </a>
+          <a href="#rules" class="btn btn-ghost">القواعد بالتفصيل</a>
+        </div>
+        <div class="rule-banner">
+          <span>⛔</span>
+          <div><b>يُمنع منعاً باتاً</b> الوقوف في طابور المحطة أو مبيت السيارة أمامها. التوجّه يكون فقط بعد الاستدعاء عبر القائمة. <b>حق عابر السبيل محفوظ دائماً.</b></div>
+        </div>
+      </div>
+      <div class="scene-stage" aria-hidden="true">
+        <div class="ground"></div>
+        <div class="rig">
+          <div class="face can-body can-back"></div>
+          <div class="face can-left"></div>
+          <div class="face can-right"></div>
+          <div class="face can-top"></div>
+          <div class="face can-bottom"></div>
+          <div class="face can-body can-front"></div>
+          <div class="can-handle"></div>
+          <div class="can-ribs"><i></i><i></i><i></i></div>
+          <div class="can-spout-mount"></div>
+          <div class="can-spout"></div>
+          <div class="can-cap"></div>
+          <div class="can-label"><b>صبراتة</b><span>WAQOD QUEUE</span></div>
+        </div>
+        <div class="drop d1"></div>
+        <div class="drop d2"></div>
+      </div>
+    </div>
+  </header>
+
+  <section id="rules" class="public-route-only">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">ملخص المنشور</div>
+        <h2>كيف تعمل المنظومة؟</h2>
+        <p>بمبادرة من عدد من السائقين وبمتابعة من لجنة أمنية، تم الاتفاق على تنظيم واحد لكل المحطات بدل الفوضى والزحام.</p>
+      </div>
+      <div class="rules-grid">
+        <div class="rule-card"><div class="num">١</div><h3>وصول الطلبية</h3><p>عند وصول شحنة وقود إلى محطة في صبراتة، يُعلن عنها هنا وفي غرف الواتساب المخصصة.</p></div>
+        <div class="rule-card"><div class="num">٢</div><h3>التسجيل بالاسم واللوحة</h3><p>يرسل السائق اسمه ورقم لوحة سيارته ليُدرج ضمن قائمة الانتظار الخاصة بتلك المحطة.</p></div>
+        <div class="rule-card"><div class="num">٣</div><h3>الاختيار والاستدعاء</h3><p>تقوم اللجنة باختيار الآليات حسب ترتيب القائمة ويتم استدعاؤها تباعاً للتوجه للتعبئة.</p></div>
+        <div class="rule-card"><div class="num">٤</div><h3>عدالة وشفافية</h3><p>الهدف ضمان العدالة بين الجميع وتفادي التفرقة أو المحسوبية في التعبئة.</p></div>
+        <div class="rule-card"><div class="num">٥</div><h3>لا طوابير ولا مبيت</h3><p>يُمنع بقاء السيارات في طابور أمام المحطة أو مبيتها هناك انتظاراً لدورها.</p></div>
+        <div class="rule-card"><div class="num">٦</div><h3>حق عابر السبيل</h3><p>القادم من خارج المدينة (عابر سبيل) له حقه المحفوظ في التعبئة، بالتنسيق مع اللجنة.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="stations" class="security-below-lock">
+    <div class="wrap">
+      <div class="section-head" id="stations-section-head">
+        <div class="kicker">القوائم الحيّة</div>
+        <h2>المحطات وقوائم الانتظار</h2>
+        <p>القوائم أدناه محدّثة لحظياً ومشتركة بين جميع من يفتح الرابط — اختر محطتك وسجّل بياناتك.</p>
+      </div>
+
+      <div class="security-chrome" id="security-header">
+        <div class="wrap" style="padding:0 0 20px;">
+          <div class="section-head" style="margin-bottom:14px;">
+            <div class="kicker">لوحة مديرية الأمن</div>
+            <h2>إدارة المحطات والقوائم</h2>
+            <p>صلاحية كاملة: إضافة/إيقاف المحطات، استدعاء السائقين، وتوليد روابط خاصة لأصحاب المحطات (عرض فقط، بلا تعديل).</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-ghost" id="copy-security-link">🔗 نسخ رابط هذه اللوحة</button>
+            <button type="button" class="btn btn-ghost" id="toggle-reports">📊 لوحة التقارير</button>
+          </div>
+        </div>
+        <div id="reports-wrap" style="padding:0 0 6px;display:none;">
+          <div class="reports-panel" id="reports-panel">
+            <div class="reports-panel-head">
+              <div>
+                <h3>📊 تقرير شامل لكل المحطات</h3>
+                <p>أرقام لحظية لكل محطة — الإجمالي (اكتمل/ألغي/عابر سبيل) يبقى محفوظاً حتى بعد مسح القائمة، لأنه يُحسب بشكل تراكمي.</p>
+              </div>
+              <div class="reports-toolbar">
+                <button type="button" class="btn btn-ghost" id="print-report">🖨️ طباعة التقرير</button>
+              </div>
+            </div>
+            <div class="reports-table-wrap" id="reports-table-wrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="owner-chrome" id="owner-header">
+        <div class="wrap" style="padding:0 0 20px;">
+          <div class="section-head" style="margin-bottom:0;">
+            <div class="kicker">لوحة صاحب المحطة</div>
+            <h2 id="owner-station-title">—</h2>
+            <p>عرض فقط: أسماء وأرقام لوحات السائقين المسجّلين في قائمتك — لا يمكنك التعديل من هنا.</p>
+          </div>
+        </div>
+        <div class="wrap" id="owner-not-found" style="display:none;">
+          <div class="stations-empty">لا توجد بيانات لهذه المحطة حالياً — قد تكون حُذفت أو أن الرابط غير صحيح. تواصل مع مديرية الأمن للتأكد من الرابط.</div>
+        </div>
+      </div>
+
+      <div class="stations-toolbar" id="stats-toolbar">
+        <div class="stats-row" id="stats-row">
+          <div class="stat-pill">محطات نشطة: <b id="stat-active">0</b></div>
+          <div class="stat-pill">في الانتظار: <b id="stat-waiting">0</b></div>
+          <div class="stat-pill">تمت تعبئتها اليوم: <b id="stat-done">0</b></div>
+        </div>
+        <button class="manage-btn primary security-only flex" id="toggle-add-station">+ إضافة محطة جديدة</button>
+      </div>
+
+      <form class="add-station-form" id="add-station-form">
+        <div class="field" style="flex:1;min-width:160px;">
+          <label>اسم المحطة</label>
+          <input type="text" id="new-station-name" placeholder="مثال: محطة الطريق الساحلي" required>
+        </div>
+        <div class="field" style="flex:1;min-width:160px;">
+          <label>ملاحظة (اختياري)</label>
+          <input type="text" id="new-station-note" placeholder="مثال: بالقرب من المدخل الشرقي">
+        </div>
+        <button type="submit" class="btn btn-primary" style="align-self:flex-end;">إضافة</button>
+      </form>
+
+      <div class="stations" id="stations-list">
+        <div class="stations-empty">جارٍ التحميل…</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="public-route-only">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">تواصل</div>
+        <h2>غرف الواتساب واللجنة</h2>
+        <p>روابط غرف الواتساب الخاصة بكل منطقة تُنشر من قِبل اللجنة — يمكن إضافتها هنا لاحقاً لتكون مرجعاً واحداً بدل التعليقات المتفرقة.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="public-route-only" id="coming-soon">
+    <div class="wrap">
+      <div class="soon-card">
+        <div class="soon-mono">CS</div>
+        <div class="soon-copy">
+          <div class="soon-kicker">مبادرة من فريق سيتي شوب</div>
+          <h2>انتظرونا قريباً</h2>
+          <p>هذه المنظومة عمل تطوعي بلا مقابل لأهل صبراتة، أنجزناه ريثما نُطلق تطبيقنا الرئيسي <b>سيتي شوب</b> — نظرة سريعة على كيف يمكن لتقنية بسيطة أن تخدم الناس.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="public-route-only">
+    <div class="wrap footer-grid">
+      <div>مبادرة خير لأهل <b>صبراتة</b> — بإشراف اللجنة الأمنية المختصة</div>
+      <div>فكرة وتطوير: <b>سيتي شوب</b></div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* =====================================================================
+   إعدادات Firebase — الصق هنا القيم من إعدادات مشروعك في Firebase Console
+   (Project settings → عند "Your apps" → أيقونة الويب </>)
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAEZajN16iCV_BxGjKa7jkrARg-2z7uACY",
+  authDomain: "sabratha-fuel-queue.firebaseapp.com",
+  projectId: "sabratha-fuel-queue",
+  storageBucket: "sabratha-fuel-queue.firebasestorage.app",
+  messagingSenderId: "429092245484",
+  appId: "1:429092245484:web:ca5f85a724a7497c63fac9"
+};
+
+/* رمز دخول لوحة مديرية الأمن — غيّره لأي رمز تحبه قبل نشر الموقع للجميع */
+const SECURITY_PIN = "AFUMHBMK2BUW";
+/* ===================================================================== */
+</script>
+
+<script>
+(function(){
+  var app = document.getElementById('app');
+  var toastEl = document.getElementById('toast');
+
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(function(){ toastEl.classList.remove('show'); }, 2600);
+  }
+
+  function escapeHtml(str){
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  /* ---------------- config guard ---------------- */
+  var configLooksReal = FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey.indexOf('ضع-قيمتك') === -1;
+  if(!configLooksReal){
+    document.getElementById('config-warning-slot').innerHTML =
+      '<div class="config-warning">⚠️ لم يتم ضبط إعدادات Firebase بعد — افتح ملف index.html وضع بيانات مشروعك في FIREBASE_CONFIG أعلى الصفحة (راجع SETUP.md). الموقع لن يخزّن أو يعرض أي بيانات حقيقية إلى أن تفعل ذلك.</div>';
+  }
+
+  /* ---------------- routing ---------------- */
+  function parseRoute(){
+    var h = (location.hash || '').replace(/^#/, '');
+    if(h === 'security') return { type: 'security' };
+    var m = h.match(/^owner=(.+)$/);
+    if(m) return { type: 'owner', token: decodeURIComponent(m[1]) };
+    return { type: 'public' };
+  }
+  var route = parseRoute();
+  app.dataset.localRoute = route.type;
+  app.dataset.localAuth = '';
+
+  function genToken(){
+    return Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
+  }
+  function baseUrl(){ return location.origin + location.pathname; }
+
+  /* ---------------- security gate ---------------- */
+  var gateInputLocked = document.getElementById('gate-input-locked');
+  var gateErrorLocked = document.getElementById('gate-error-locked');
+  function setSecurityAuthed(){
+    app.dataset.localAuth = 'security';
+    try{ localStorage.setItem('sabratha-fuel-security-auth', '1'); }catch(e){}
+  }
+  function submitSecurityGate(){
+    if(gateInputLocked.value.trim() === SECURITY_PIN){
+      setSecurityAuthed();
+      gateErrorLocked.style.display = 'none';
+      toast('تم الدخول إلى لوحة مديرية الأمن');
+    } else {
+      gateErrorLocked.style.display = 'block';
+    }
+  }
+  if(route.type === 'security'){
+    var alreadyAuthed = false;
+    try{ alreadyAuthed = localStorage.getItem('sabratha-fuel-security-auth') === '1'; }catch(e){}
+    if(alreadyAuthed) setSecurityAuthed();
+    document.getElementById('gate-submit-locked').addEventListener('click', submitSecurityGate);
+    gateInputLocked.addEventListener('keydown', function(e){ if(e.key === 'Enter') submitSecurityGate(); });
+    document.getElementById('security-logout').addEventListener('click', function(){
+      app.dataset.localAuth = '';
+      try{ localStorage.removeItem('sabratha-fuel-security-auth'); }catch(e){}
+      toast('تم الخروج من لوحة مديرية الأمن');
+    });
+    document.getElementById('copy-security-link').addEventListener('click', function(){
+      var url = baseUrl() + '#security';
+      navigator.clipboard.writeText(url).then(function(){ toast('تم نسخ رابط لوحة مديرية الأمن'); })
+        .catch(function(){ toast('الرابط: ' + url); });
+    });
+    document.getElementById('toggle-reports').addEventListener('click', function(){
+      var w = document.getElementById('reports-wrap');
+      var open = w.style.display !== 'none';
+      w.style.display = open ? 'none' : 'block';
+      if(!open) renderReportsPanel();
+    });
+    document.getElementById('print-report').addEventListener('click', function(){
+      window.print();
+    });
+  }
+
+  if(!configLooksReal) return; /* nothing below needs Firebase during first-time setup */
+
+  /* ---------------- Firebase ---------------- */
+  firebase.initializeApp(FIREBASE_CONFIG);
+  var db = firebase.firestore();
+  var FieldValue = firebase.firestore.FieldValue;
+
+  var stations = [];           // [{id, name, note, active, ownerToken, createdAt}]
+  var queues = {};             // {stationId: [{id, name, plate, transit, status, createdAt}]}
+  var queueUnsubs = {};        // {stationId: unsubscribeFn}
+
+  function statusLabel(s){
+    return {waiting:'في الانتظار', called:'الرجاء التوجه الآن', done:'تمت التعبئة', cancelled:'ملغى'}[s] || s;
+  }
+
+  function watchQueue(stationId){
+    if(queueUnsubs[stationId]) return;
+    queueUnsubs[stationId] = db.collection('stations').doc(stationId).collection('queue')
+      .orderBy('createdAt', 'asc')
+      .onSnapshot(function(snap){
+        queues[stationId] = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+        render();
+      }, function(err){ console.error('queue listen error', err); });
+  }
+
+  function renderRow(stationId, entry, posLabel, showManage){
+    var actionsHtml = '';
+    if(showManage){
+      actionsHtml =
+        '<div class="row-actions flex">' +
+          '<button type="button" class="icon-btn" title="استدعاء الآن" data-row-action="call" data-station="'+stationId+'" data-entry="'+entry.id+'">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+          '<button type="button" class="icon-btn" title="تمت التعبئة" data-row-action="done" data-station="'+stationId+'" data-entry="'+entry.id+'">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+          '<button type="button" class="icon-btn danger" title="إلغاء" data-row-action="cancel" data-station="'+stationId+'" data-entry="'+entry.id+'">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' +
+        '</div>';
+    }
+    return (
+      '<div class="queue-row" data-status="'+entry.status+'">' +
+        '<div class="pos">'+posLabel+'</div>' +
+        '<div class="who">' +
+          '<div class="name">'+escapeHtml(entry.name)+'</div>' +
+          '<div class="plate">'+escapeHtml(entry.plate)+'</div>' +
+          (entry.transit ? '<div class="transit-tag">عابر سبيل</div>' : '') +
+        '</div>' +
+        '<span class="status-badge" data-status="'+entry.status+'">'+statusLabel(entry.status)+'</span>' +
+        actionsHtml +
+      '</div>'
+    );
+  }
+
+  function stationLiveCounts(stationId){
+    var entries = queues[stationId] || [];
+    var waiting = 0, called = 0;
+    entries.forEach(function(e){
+      if(e.status === 'waiting') waiting++;
+      if(e.status === 'called') called++;
+    });
+    return { waiting: waiting, called: called };
+  }
+
+  function renderMetricsRow(st){
+    var live = stationLiveCounts(st.id);
+    return (
+      '<div class="station-metrics">' +
+        '<span class="metric-pill mp-waiting">🕒 في الانتظار <b>'+live.waiting+'</b></span>' +
+        '<span class="metric-pill mp-called">📣 نودي عليهم <b>'+live.called+'</b></span>' +
+        '<span class="metric-pill mp-served">✅ تمت تعبئتهم (إجمالي) <b>'+(st.totalServed||0)+'</b></span>' +
+        '<span class="metric-pill mp-transit">🚗 عابر سبيل (إجمالي) <b>'+(st.totalTransit||0)+'</b></span>' +
+      '</div>'
+    );
+  }
+
+  function renderStationCard(st){
+    var isSecurity = (route.type === 'security' && app.dataset.localAuth === 'security');
+    var isOwner = (route.type === 'owner');
+    var entries = queues[st.id] || [];
+    var waitingCounter = 0;
+    var rowsHtml = entries.length ? entries.map(function(e){
+      var posLabel = '—';
+      if(e.status === 'waiting' || e.status === 'called'){ waitingCounter++; posLabel = waitingCounter; }
+      return renderRow(st.id, e, posLabel, isSecurity);
+    }).join('') : '<div class="queue-empty">لا يوجد أحد في القائمة الآن — كن أول المسجّلين</div>';
+
+    var registerHtml = isOwner ? '' : (
+      '<form class="register-form" data-role="register-form" data-station="'+st.id+'">' +
+        '<div class="field"><label>الاسم الكامل</label><input type="text" data-role="input-name" placeholder="اسمك الثلاثي" required></div>' +
+        '<div class="field"><label>رقم لوحة السيارة</label><input type="text" data-role="input-plate" placeholder="مثال: صبراتة 1234" required></div>' +
+        '<button type="submit" class="btn btn-primary">سجّل دوري</button>' +
+        '<label class="transit-check"><input type="checkbox" data-role="input-transit"> أنا عابر سبيل (قادم من خارج صبراتة)</label>' +
+      '</form>'
+    );
+
+    var manageHtml = isSecurity ? (
+      '<div class="station-manage">' +
+        '<button type="button" class="manage-btn" data-station-action="toggle-status" data-station="'+st.id+'">⏸️ إيقاف / تفعيل الاستقبال</button>' +
+        '<button type="button" class="manage-btn" data-station-action="clear-done" data-station="'+st.id+'">🧹 مسح المكتمل والملغى</button>' +
+        '<button type="button" class="manage-btn primary" data-station-action="copy-owner-link" data-station="'+st.id+'">🔗 نسخ رابط صاحب المحطة</button>' +
+        '<button type="button" class="manage-btn danger" data-station-action="remove-station" data-station="'+st.id+'">🗑️ حذف المحطة</button>' +
+      '</div>'
+    ) : '';
+
+    var metricsHtml = (isSecurity || isOwner) ? renderMetricsRow(st) : '';
+
+    return (
+      '<article class="station-card" data-station-id="'+st.id+'">' +
+        '<div class="station-head">' +
+          '<div class="station-title">' +
+            '<div class="station-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 20V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v14" stroke="currentColor" stroke-width="1.8"/><path d="M4 20h10M13 9l3 2.6V17a1.4 1.4 0 0 0 2.8 0v-5.4L16.5 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
+            '<div><div class="station-name">'+escapeHtml(st.name)+'</div><div class="station-note">'+escapeHtml(st.note||'')+'</div></div>' +
+          '</div>' +
+          '<span class="station-status" data-active="'+(st.active ? 1:0)+'">'+(st.active ? 'استقبال طلبات نشط' : 'استقبال متوقف مؤقتاً')+'</span>' +
+        '</div>' +
+        metricsHtml +
+        '<div class="station-body"><div class="queue-list">'+rowsHtml+'</div>'+registerHtml+'</div>' +
+        manageHtml +
+      '</article>'
+    );
+  }
+
+  function recomputeStats(){
+    var active = 0, waiting = 0, done = 0;
+    stations.forEach(function(st){
+      if(st.active) active++;
+      (queues[st.id]||[]).forEach(function(e){
+        if(e.status === 'waiting' || e.status === 'called') waiting++;
+        if(e.status === 'done') done++;
+      });
+    });
+    var a = document.getElementById('stat-active'); if(a) a.textContent = active;
+    var w = document.getElementById('stat-waiting'); if(w) w.textContent = waiting;
+    var d = document.getElementById('stat-done'); if(d) d.textContent = done;
+  }
+
+  function renderReportsPanel(){
+    var wrap = document.getElementById('reports-table-wrap');
+    if(!wrap) return;
+    if(!stations.length){
+      wrap.innerHTML = '<div class="stations-empty">لا توجد محطات بعد لعرض تقرير عنها.</div>';
+      return;
+    }
+    var totals = { waiting:0, called:0, served:0, cancelled:0, transit:0, registered:0 };
+    var rows = stations.map(function(st){
+      var live = stationLiveCounts(st.id);
+      var served = st.totalServed || 0, cancelled = st.totalCancelled || 0,
+          transit = st.totalTransit || 0, registered = st.totalRegistered || 0;
+      totals.waiting += live.waiting; totals.called += live.called; totals.served += served;
+      totals.cancelled += cancelled; totals.transit += transit; totals.registered += registered;
+      return (
+        '<tr>' +
+          '<td>'+escapeHtml(st.name)+'</td>' +
+          '<td><span class="reports-status-tag" data-active="'+(st.active?1:0)+'">'+(st.active?'نشطة':'متوقفة')+'</span></td>' +
+          '<td class="tabular">'+live.waiting+'</td>' +
+          '<td class="tabular">'+live.called+'</td>' +
+          '<td class="tabular">'+served+'</td>' +
+          '<td class="tabular">'+cancelled+'</td>' +
+          '<td class="tabular">'+transit+'</td>' +
+          '<td class="tabular">'+registered+'</td>' +
+        '</tr>'
+      );
+    }).join('');
+    wrap.innerHTML =
+      '<table class="reports-table">' +
+        '<thead><tr>' +
+          '<th>المحطة</th><th>الحالة</th><th>في الانتظار الآن</th><th>نودي عليهم الآن</th>' +
+          '<th>اكتمل (إجمالي)</th><th>ألغي (إجمالي)</th><th>عابر سبيل (إجمالي)</th><th>إجمالي التسجيلات</th>' +
+        '</tr></thead>' +
+        '<tbody>'+rows+'</tbody>' +
+        '<tfoot><tr>' +
+          '<td>الإجمالي العام</td><td>—</td>' +
+          '<td class="tabular">'+totals.waiting+'</td><td class="tabular">'+totals.called+'</td>' +
+          '<td class="tabular">'+totals.served+'</td><td class="tabular">'+totals.cancelled+'</td>' +
+          '<td class="tabular">'+totals.transit+'</td><td class="tabular">'+totals.registered+'</td>' +
+        '</tr></tfoot>' +
+      '</table>';
+  }
+
+  function render(){
+    var listEl = document.getElementById('stations-list');
+
+    if(route.type === 'owner'){
+      var match = stations.find(function(s){ return s.ownerToken === route.token; });
+      var titleEl = document.getElementById('owner-station-title');
+      var notFoundEl = document.getElementById('owner-not-found');
+      if(match){
+        titleEl.textContent = match.name;
+        notFoundEl.style.display = 'none';
+        listEl.style.display = '';
+        listEl.innerHTML = renderStationCard(match);
+      } else {
+        titleEl.textContent = 'المحطة غير موجودة';
+        notFoundEl.style.display = 'block';
+        listEl.style.display = 'none';
+        listEl.innerHTML = '';
+      }
+      return;
+    }
+
+    if(!stations.length){
+      listEl.innerHTML = '<div class="stations-empty">' +
+        (route.type === 'security' ? 'لا توجد محطات بعد — اضغط "إضافة محطة جديدة" أعلاه.' : 'لا توجد محطات مسجّلة حالياً — تابع الإعلانات في غرف الواتساب.') +
+        '</div>';
+    } else {
+      listEl.innerHTML = stations.map(renderStationCard).join('');
+    }
+    recomputeStats();
+    var reportsWrap = document.getElementById('reports-wrap');
+    if(route.type === 'security' && reportsWrap && reportsWrap.style.display !== 'none'){
+      renderReportsPanel();
+    }
+  }
+
+  /* ---------------- Firestore reads ---------------- */
+  if(route.type === 'owner'){
+    db.collection('stations').where('ownerToken', '==', route.token).limit(1)
+      .onSnapshot(function(snap){
+        stations = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+        stations.forEach(function(st){ watchQueue(st.id); });
+        render();
+      }, function(err){ console.error('owner query error', err); });
+  } else {
+    db.collection('stations').orderBy('createdAt', 'asc').onSnapshot(function(snap){
+      stations = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+      stations.forEach(function(st){ watchQueue(st.id); });
+      render();
+    }, function(err){
+      console.error('stations listen error', err);
+      document.getElementById('stations-list').innerHTML =
+        '<div class="stations-empty">تعذّر الاتصال بقاعدة البيانات — تأكد من إعدادات Firebase وقواعد Firestore (راجع SETUP.md).</div>';
+    });
+  }
+
+  /* ---------------- actions: delegated click/submit ---------------- */
+  document.getElementById('stations-list').addEventListener('submit', function(e){
+    var form = e.target.closest('[data-role="register-form"]');
+    if(!form) return;
+    e.preventDefault();
+    var stationId = form.dataset.station;
+    var name = form.querySelector('[data-role="input-name"]').value.trim();
+    var plate = form.querySelector('[data-role="input-plate"]').value.trim();
+    var transit = form.querySelector('[data-role="input-transit"]').checked;
+    if(!name || !plate) return;
+    db.collection('stations').doc(stationId).collection('queue').add({
+      name: name, plate: plate, transit: transit, status: 'waiting',
+      createdAt: FieldValue.serverTimestamp()
+    }).then(function(){
+      var counterUpdate = { totalRegistered: FieldValue.increment(1) };
+      if(transit) counterUpdate.totalTransit = FieldValue.increment(1);
+      db.collection('stations').doc(stationId).update(counterUpdate);
+      var st = stations.find(function(s){ return s.id === stationId; });
+      toast('تم تسجيلك في قائمة ' + (st ? st.name : '') + ' ✅');
+    }).catch(function(err){ toast('تعذّر التسجيل: ' + err.message); });
+  });
+
+  document.getElementById('stations-list').addEventListener('click', function(e){
+    var rowBtn = e.target.closest('[data-row-action]');
+    if(rowBtn){
+      var status = {call:'called', done:'done', cancel:'cancelled'}[rowBtn.dataset.rowAction];
+      db.collection('stations').doc(rowBtn.dataset.station).collection('queue').doc(rowBtn.dataset.entry)
+        .update({status: status}).catch(function(err){ toast('خطأ: ' + err.message); });
+      if(status === 'done'){
+        db.collection('stations').doc(rowBtn.dataset.station).update({ totalServed: FieldValue.increment(1) });
+      } else if(status === 'cancelled'){
+        db.collection('stations').doc(rowBtn.dataset.station).update({ totalCancelled: FieldValue.increment(1) });
+      }
+      return;
+    }
+    var stBtn = e.target.closest('[data-station-action]');
+    if(!stBtn) return;
+    var stationId = stBtn.dataset.station;
+    var action = stBtn.dataset.stationAction;
+    var st = stations.find(function(s){ return s.id === stationId; });
+
+    if(action === 'toggle-status'){
+      db.collection('stations').doc(stationId).update({active: !(st && st.active)});
+    } else if(action === 'remove-station'){
+      db.collection('stations').doc(stationId).delete()
+        .then(function(){ toast('تم حذف المحطة'); })
+        .catch(function(err){ toast('خطأ: ' + err.message); });
+    } else if(action === 'clear-done'){
+      var ref = db.collection('stations').doc(stationId).collection('queue');
+      Promise.all(['done','cancelled'].map(function(s){
+        return ref.where('status','==',s).get().then(function(snap){
+          var batch = db.batch();
+          snap.forEach(function(doc){ batch.delete(doc.ref); });
+          return batch.commit();
+        });
+      })).then(function(){ toast('تم تنظيف القائمة'); });
+    } else if(action === 'copy-owner-link'){
+      var token = (st && st.ownerToken) || genToken();
+      if(!st || !st.ownerToken){
+        db.collection('stations').doc(stationId).update({ownerToken: token});
+      }
+      var url = baseUrl() + '#owner=' + encodeURIComponent(token);
+      navigator.clipboard.writeText(url).then(function(){
+        toast('تم نسخ رابط صاحب المحطة — أرسله لصاحب المحطة فقط');
+      }).catch(function(){ toast('الرابط: ' + url); });
+    }
+  });
+
+  document.getElementById('toggle-add-station').addEventListener('click', function(){
+    var f = document.getElementById('add-station-form');
+    f.style.display = (f.style.display === 'flex') ? 'none' : 'flex';
+  });
+
+  document.getElementById('add-station-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var nameInput = document.getElementById('new-station-name');
+    var noteInput = document.getElementById('new-station-note');
+    var name = nameInput.value.trim();
+    var note = noteInput.value.trim();
+    if(!name) return;
+    db.collection('stations').add({
+      name: name, note: note, active: true, ownerToken: genToken(),
+      totalRegistered: 0, totalServed: 0, totalCancelled: 0, totalTransit: 0,
+      createdAt: FieldValue.serverTimestamp()
+    }).then(function(){
+      nameInput.value = ''; noteInput.value = '';
+      document.getElementById('add-station-form').style.display = 'none';
+      toast('تمت إضافة المحطة');
+    }).catch(function(err){ toast('تعذّرت الإضافة: ' + err.message); });
+  });
+})();
+</script>
+</body>
+</html>
