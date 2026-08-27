@@ -888,6 +888,9 @@ const FIREBASE_CONFIG = {
   }
   function baseUrl(){ return location.origin + location.pathname; }
 
+  /* ---------------- Firebase app init (مبكراً عشان يكون جاهز لبوابة تسجيل الدخول أدناه) ---------------- */
+  firebase.initializeApp(FIREBASE_CONFIG);
+
   /* ---------------- security gate (Firebase Authentication — حسابات أعضاء اللجنة فقط) ---------------- */
   var gateInputEmail = document.getElementById('gate-input-email');
   var gateInputLocked = document.getElementById('gate-input-locked');
@@ -939,7 +942,6 @@ const FIREBASE_CONFIG = {
   if(!configLooksReal) return; /* nothing below needs Firebase during first-time setup */
 
   /* ---------------- Firebase ---------------- */
-  firebase.initializeApp(FIREBASE_CONFIG);
   var db = firebase.firestore();
   var FieldValue = firebase.firestore.FieldValue;
 
