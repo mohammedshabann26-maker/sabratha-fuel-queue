@@ -884,7 +884,19 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
       }, function(err){ console.error('queue listen error', err); });
   }
 
-  function renderRow(stationId, entry, posLabel, showManage){
+  /* إخفاء جزئي للاسم ورقم اللوحة في عرض العامة — الاسم الأول فقط + أحرف بقية الاسم، وآخر أرقام اللوحة فقط */
+  function maskName(name){
+    var parts = (name || '').trim().split(/\s+/).filter(Boolean);
+    if(!parts.length) return '';
+    return parts[0] + (parts.length > 1 ? ' ' + parts.slice(1).map(function(p){ return p.charAt(0) + '.'; }).join(' ') : '');
+  }
+  function maskPlate(plate){
+    var p = (plate || '').trim();
+    if(p.length <= 4) return p;
+    return '•••• ' + p.slice(-4);
+  }
+
+  function renderRow(stationId, entry, posLabel, showManage, showFull){
     var actionsHtml = '';
     if(showManage){
       actionsHtml =
@@ -909,8 +921,8 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
         '<div class="pos">'+posLabel+'</div>' +
         '<div class="avatar">'+escapeHtml(initial)+'</div>' +
         '<div class="who">' +
-          '<div class="name">'+escapeHtml(entry.name)+'</div>' +
-          '<div class="plate">'+escapeHtml(entry.plate)+'</div>' +
+          '<div class="name">'+escapeHtml(showFull ? entry.name : maskName(entry.name))+'</div>' +
+          '<div class="plate">'+escapeHtml(showFull ? entry.plate : maskPlate(entry.plate))+'</div>' +
           (entry.transit ? '<div class="transit-tag">عابر سبيل</div>' : '') +
         '</div>' +
         '<div>' +
@@ -952,7 +964,7 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
     var rowsHtml = entries.length ? entries.map(function(e){
       var posLabel = '—';
       if(e.status === 'waiting' || e.status === 'called'){ waitingCounter++; posLabel = waitingCounter; }
-      return renderRow(st.id, e, posLabel, isSecurity);
+      return renderRow(st.id, e, posLabel, isSecurity, (isSecurity || isOwner));
     }).join('') : '<div class="queue-empty">لا يوجد أحد في القائمة الآن — كن أول المسجّلين</div>';
 
     var registerHtml = '';
