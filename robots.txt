@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mohammedshabann26-maker.github.io/sabratha-fuel-queue/sitemap.xml
