@@ -46,6 +46,7 @@
 <!-- Firebase (free tier) — real-time shared database for the queues -->
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
 
 <style>
   :root{
@@ -595,9 +596,10 @@
     <div class="gate-card" style="max-width:360px;text-align:center;">
       <div class="gate-icon">🛡️</div>
       <h3>لوحة تحكم مديرية الأمن</h3>
-      <p>هذه الصفحة خاصة بأعضاء اللجنة المسؤولين عن متابعة قوائم التعبئة في صبراتة. الرجاء إدخال الرمز الخاص للمتابعة.</p>
-      <div class="gate-error" id="gate-error-locked">الرمز غير صحيح، حاول مجدداً.</div>
-      <input type="password" id="gate-input-locked" placeholder="أدخل رمز مديرية الأمن">
+      <p>هذه الصفحة خاصة بأعضاء اللجنة المسؤولين عن متابعة قوائم التعبئة في صبراتة. الدخول يتطلب حساباً مسجّلاً باسمك من قِبل مدير النظام.</p>
+      <div class="gate-error" id="gate-error-locked">بيانات الدخول غير صحيحة، حاول مجدداً.</div>
+      <input type="email" id="gate-input-email" placeholder="البريد الإلكتروني" autocomplete="username" style="margin-bottom:10px;">
+      <input type="password" id="gate-input-locked" placeholder="كلمة المرور" autocomplete="current-password">
       <button type="button" class="btn btn-primary" id="gate-submit-locked" style="width:100%;">دخول</button>
     </div>
   </div>
@@ -841,9 +843,6 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "429092245484",
   appId: "1:429092245484:web:ca5f85a724a7497c63fac9"
 };
-
-/* رمز دخول لوحة مديرية الأمن — غيّره لأي رمز تحبه قبل نشر الموقع للجميع */
-const SECURITY_PIN = "AFUMHBMK2BUW";
 /* ===================================================================== */
 </script>
 
@@ -889,32 +888,37 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
   }
   function baseUrl(){ return location.origin + location.pathname; }
 
-  /* ---------------- security gate ---------------- */
+  /* ---------------- security gate (Firebase Authentication — حسابات أعضاء اللجنة فقط) ---------------- */
+  var gateInputEmail = document.getElementById('gate-input-email');
   var gateInputLocked = document.getElementById('gate-input-locked');
   var gateErrorLocked = document.getElementById('gate-error-locked');
-  function setSecurityAuthed(){
-    app.dataset.localAuth = 'security';
-    try{ localStorage.setItem('sabratha-fuel-security-auth', '1'); }catch(e){}
-  }
+  var auth = firebase.auth();
+
   function submitSecurityGate(){
-    if(gateInputLocked.value.trim() === SECURITY_PIN){
-      setSecurityAuthed();
+    var email = gateInputEmail.value.trim();
+    var password = gateInputLocked.value;
+    if(!email || !password) return;
+    var btn = document.getElementById('gate-submit-locked');
+    btn.disabled = true; btn.textContent = 'جارِ الدخول...';
+    auth.signInWithEmailAndPassword(email, password).then(function(){
       gateErrorLocked.style.display = 'none';
       toast('تم الدخول إلى لوحة مديرية الأمن');
-    } else {
+    }).catch(function(){
       gateErrorLocked.style.display = 'block';
-    }
+    }).finally(function(){
+      btn.disabled = false; btn.textContent = 'دخول';
+    });
   }
   if(route.type === 'security'){
-    var alreadyAuthed = false;
-    try{ alreadyAuthed = localStorage.getItem('sabratha-fuel-security-auth') === '1'; }catch(e){}
-    if(alreadyAuthed) setSecurityAuthed();
+    auth.onAuthStateChanged(function(user){
+      app.dataset.localAuth = user ? 'security' : '';
+      render();
+    });
     document.getElementById('gate-submit-locked').addEventListener('click', submitSecurityGate);
     gateInputLocked.addEventListener('keydown', function(e){ if(e.key === 'Enter') submitSecurityGate(); });
+    gateInputEmail.addEventListener('keydown', function(e){ if(e.key === 'Enter') submitSecurityGate(); });
     document.getElementById('security-logout').addEventListener('click', function(){
-      app.dataset.localAuth = '';
-      try{ localStorage.removeItem('sabratha-fuel-security-auth'); }catch(e){}
-      toast('تم الخروج من لوحة مديرية الأمن');
+      auth.signOut().then(function(){ toast('تم الخروج من لوحة مديرية الأمن'); });
     });
     document.getElementById('copy-security-link').addEventListener('click', function(){
       var url = baseUrl() + '#security';
