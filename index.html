@@ -407,8 +407,49 @@
   .manage-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm);}
   .manage-btn.danger{color:var(--danger);border-color:color-mix(in srgb, var(--danger) 40%, var(--line));}
   .manage-btn.primary{background:var(--brand-gradient);color:#fff;border-color:transparent;}
+  .manage-select{
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;
+    padding:8px 12px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;
+  }
 
   .stations-empty{text-align:center;padding:40px 20px;border:1px dashed var(--line);border-radius:20px;color:var(--ink-dim);}
+
+  .supply-badge{font-size:11.5px;font-weight:800;padding:6px 12px;border-radius:999px;white-space:nowrap;}
+  .supply-badge.ss-shipment{background:var(--success-bg);color:var(--success);}
+  .supply-badge.ss-pending{background:var(--warning-bg);color:var(--warning);}
+  .supply-badge.ss-closed{background:var(--danger-bg);color:var(--danger);}
+
+  .sub-panel{margin:0 18px 16px;border-top:1px dashed var(--line);padding-top:12px;}
+  .sub-panel-loading,.sub-panel-empty{font-size:12.5px;color:var(--ink-dim);text-align:center;padding:10px 0;}
+  .shipment-log,.pump-log{display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;}
+  .shipment-entry,.pump-entry{background:var(--surface-2);border-radius:12px;padding:10px 12px;}
+  .shipment-meta,.pump-meta{font-size:12.5px;color:var(--ink-dim);margin-bottom:6px;}
+  .shipment-meta b,.pump-meta b{color:var(--ink);font-family:'Cairo';}
+  .pump-delta{color:var(--accent-2);font-weight:800;}
+  .shipment-photos{display:flex;gap:8px;flex-wrap:wrap;}
+  .shipment-thumb{width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:zoom-in;}
+
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(10,14,12,.6);z-index:100;
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-card{
+    background:var(--surface);border-radius:20px;padding:24px;max-width:420px;width:100%;
+    box-shadow:var(--shadow-lg);max-height:88vh;overflow-y:auto;
+  }
+  .modal-card h3{font-family:'Cairo';font-size:17px;margin-bottom:4px;}
+  .modal-station-name{font-size:13px;color:var(--accent-2);font-weight:800;margin-bottom:16px;}
+  .modal-card .field{margin-bottom:12px;}
+  .modal-card .field label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-dim);margin-bottom:6px;}
+  .modal-card .field input{
+    width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);
+    border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;
+  }
+  .modal-actions{display:flex;gap:10px;margin-top:16px;}
+  .modal-actions .btn{flex:1;justify-content:center;}
+  #photo-lightbox{cursor:zoom-out;}
+  #photo-lightbox-img{max-width:100%;max-height:85vh;border-radius:12px;}
 
   .station-metrics{
     display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line);
@@ -749,6 +790,42 @@
   </footer>
 
   <div class="toast" id="toast"></div>
+
+  <div class="modal-overlay" id="shipment-modal">
+    <div class="modal-card">
+      <h3>📦 تسجيل طلبية جديدة</h3>
+      <p class="modal-station-name" id="shipment-modal-station"></p>
+      <form id="shipment-form">
+        <div class="field"><label>عدد الترلات الواصلة</label><input type="number" id="shipment-truck-count" min="1" step="1" required></div>
+        <div class="field"><label>صورة الترلة / الشحنة</label><input type="file" accept="image/*" capture="environment" id="shipment-truck-photo" required></div>
+        <div class="field"><label>صورة الفاتورة / الوصل المرافق للشحنة</label><input type="file" accept="image/*" capture="environment" id="shipment-invoice-photo" required></div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">حفظ الطلبية</button>
+          <button type="button" class="btn btn-ghost" data-modal-close="shipment">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="pump-modal">
+    <div class="modal-card">
+      <h3>⛽ تسجيل قراءة عداد طرمبة</h3>
+      <p class="modal-station-name" id="pump-modal-station"></p>
+      <form id="pump-form">
+        <div class="field"><label>اسم/رقم الطرمبة</label><input type="text" id="pump-label" placeholder="مثال: طرمبة 1" required></div>
+        <div class="field"><label>قراءة العداد الحالية (لتر)</label><input type="number" id="pump-reading" step="0.01" required></div>
+        <div class="field"><label>صورة العداد</label><input type="file" accept="image/*" capture="environment" id="pump-photo" required></div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">حفظ القراءة</button>
+          <button type="button" class="btn btn-ghost" data-modal-close="pump">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="photo-lightbox">
+    <img id="photo-lightbox-img" alt="عرض الصورة">
+  </div>
 </div>
 
 <script>
@@ -866,12 +943,80 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
   var queues = {};             // {stationId: [{id, name, plate, transit, status, createdAt}]}
   var queueUnsubs = {};        // {stationId: unsubscribeFn}
 
+  /* سجل الشحنات وقراءات العدادات — تُحمَّل عند الطلب (وليست live) لتقليل القراءات، وتُخزَّن الصور كـ base64 مضغوط داخل Firestore مباشرة بدل Firebase Storage (يتطلب خطة مدفوعة) */
+  var shipmentsCache = {};     // {stationId: [{id, truckCount, truckPhoto, invoicePhoto, createdAt}]}
+  var pumpReadingsCache = {};  // {stationId: [{id, pumpLabel, reading, photo, createdAt}]}
+  var openPanels = {};         // {stationId: {shipments:bool, pumps:bool}}
+  var currentShipmentStation = null, currentPumpStation = null;
+
   /* مهلة الحضور بعد الاستدعاء — بعدها يُلغى الدور تلقائياً وينتقل لمن بعده */
   var TIMEOUT_MS = 15 * 60 * 1000;
 
   function statusLabel(s, reason){
     if(s === 'cancelled' && reason === 'timeout') return 'انتهت المهلة';
     return {waiting:'في الانتظار', called:'الرجاء التوجه الآن', done:'تمت التعبئة', cancelled:'ملغى'}[s] || s;
+  }
+
+  function supplyStatusInfo(s){
+    return {
+      shipment: { label: '📦 وصلت طلبية', cls: 'ss-shipment' },
+      pending: { label: '⏳ طلب قيد الانتظار', cls: 'ss-pending' },
+      closed: { label: '⛔ مغلق', cls: 'ss-closed' }
+    }[s] || null;
+  }
+
+  /* ضغط الصورة داخل المتصفح قبل حفظها في Firestore (بدل رفعها لتخزين خارجي) */
+  function compressImage(file, maxDim, quality){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(){
+        var img = new Image();
+        img.onload = function(){
+          var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          var cw = Math.round(img.width * scale), ch = Math.round(img.height * scale);
+          var canvas = document.createElement('canvas');
+          canvas.width = cw; canvas.height = ch;
+          canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = function(){ reject(new Error('تعذّرت قراءة الصورة')); };
+        img.src = reader.result;
+      };
+      reader.onerror = function(){ reject(new Error('تعذّرت قراءة الملف')); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function loadShipments(stationId){
+    db.collection('stations').doc(stationId).collection('shipments')
+      .orderBy('createdAt', 'desc').limit(30).get().then(function(snap){
+        shipmentsCache[stationId] = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+        render();
+      }).catch(function(err){ toast('تعذّر تحميل سجل الشحنات: ' + err.message); });
+  }
+
+  function loadPumpReadings(stationId){
+    db.collection('stations').doc(stationId).collection('pumpReadings')
+      .orderBy('createdAt', 'desc').limit(60).get().then(function(snap){
+        pumpReadingsCache[stationId] = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+        render();
+      }).catch(function(err){ toast('تعذّر تحميل قراءات العدادات: ' + err.message); });
+  }
+
+  function openShipmentModal(stationId){
+    currentShipmentStation = stationId;
+    var st = stations.find(function(s){ return s.id === stationId; });
+    document.getElementById('shipment-modal-station').textContent = st ? st.name : '';
+    document.getElementById('shipment-form').reset();
+    document.getElementById('shipment-modal').classList.add('show');
+  }
+
+  function openPumpReadingModal(stationId){
+    currentPumpStation = stationId;
+    var st = stations.find(function(s){ return s.id === stationId; });
+    document.getElementById('pump-modal-station').textContent = st ? st.name : '';
+    document.getElementById('pump-form').reset();
+    document.getElementById('pump-modal').classList.add('show');
   }
 
   function watchQueue(stationId){
@@ -969,14 +1114,31 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
 
     var registerHtml = '';
 
+    var ss = st.supplyStatus || '';
+    var ssInfo = supplyStatusInfo(ss);
+
     var manageHtml = isSecurity ? (
       '<div class="station-manage">' +
+        '<select class="manage-select" data-station-action="set-supply-status" data-station="'+st.id+'">' +
+          '<option value=""'+(ss===''?' selected':'')+'>🟢 الوضع عادي</option>' +
+          '<option value="shipment"'+(ss==='shipment'?' selected':'')+'>📦 وصلت طلبية</option>' +
+          '<option value="pending"'+(ss==='pending'?' selected':'')+'>⏳ طلب قيد الانتظار</option>' +
+          '<option value="closed"'+(ss==='closed'?' selected':'')+'>⛔ مغلق</option>' +
+        '</select>' +
         '<button type="button" class="manage-btn" data-station-action="toggle-status" data-station="'+st.id+'">⏸️ إيقاف / تفعيل الاستقبال</button>' +
         '<button type="button" class="manage-btn" data-station-action="clear-done" data-station="'+st.id+'">🧹 مسح المكتمل والملغى</button>' +
         '<button type="button" class="manage-btn primary" data-station-action="copy-owner-link" data-station="'+st.id+'">🔗 نسخ رابط صاحب المحطة</button>' +
         '<button type="button" class="manage-btn danger" data-station-action="remove-station" data-station="'+st.id+'">🗑️ حذف المحطة</button>' +
+      '</div>' +
+      '<div class="station-manage">' +
+        '<button type="button" class="manage-btn primary" data-station-action="new-shipment" data-station="'+st.id+'">➕ تسجيل طلبية جديدة</button>' +
+        '<button type="button" class="manage-btn" data-station-action="toggle-shipments" data-station="'+st.id+'">📦 سجل الشحنات</button>' +
+        '<button type="button" class="manage-btn primary" data-station-action="new-reading" data-station="'+st.id+'">➕ تسجيل قراءة عداد</button>' +
+        '<button type="button" class="manage-btn" data-station-action="toggle-pumps" data-station="'+st.id+'">⛽ عدادات الطرمبات</button>' +
       '</div>'
     ) : '';
+
+    var subPanelsHtml = isSecurity ? renderSubPanels(st) : '';
 
     var metricsHtml = (isSecurity || isOwner) ? renderMetricsRow(st) : '';
 
@@ -988,13 +1150,69 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
             '<div><div class="station-name">'+escapeHtml(st.name)+'</div><div class="station-note">'+escapeHtml(st.note||'')+'</div></div>' +
           '</div>' +
           '<span class="station-status" data-active="'+(st.active ? 1:0)+'">'+(st.active ? 'استقبال طلبات نشط' : 'استقبال متوقف مؤقتاً')+'</span>' +
+          (ssInfo ? '<span class="supply-badge '+ssInfo.cls+'">'+ssInfo.label+'</span>' : '') +
           ((!isSecurity && !isOwner) ? '<span class="wait-pill">🕒 قيد الانتظار <b>'+stationLiveCounts(st.id).waiting+'</b></span>' : '') +
         '</div>' +
         metricsHtml +
         '<div class="station-body"><div class="queue-list">'+rowsHtml+'</div>'+registerHtml+'</div>' +
         manageHtml +
+        subPanelsHtml +
       '</article>'
     );
+  }
+
+  function renderSubPanels(st){
+    var html = '';
+    var panels = openPanels[st.id] || {};
+
+    if(panels.shipments){
+      var ships = shipmentsCache[st.id];
+      var body;
+      if(!ships) body = '<div class="sub-panel-loading">جارِ التحميل...</div>';
+      else if(!ships.length) body = '<div class="sub-panel-empty">لا توجد شحنات مسجّلة بعد لهذه المحطة.</div>';
+      else body = '<div class="shipment-log">' + ships.map(function(sh){
+        var when = (sh.createdAt && sh.createdAt.toDate) ? sh.createdAt.toDate().toLocaleString('ar-LY') : '—';
+        return (
+          '<div class="shipment-entry">' +
+            '<div class="shipment-meta"><b>'+(sh.truckCount||0)+'</b> ترلة واصلة — <span>'+when+'</span></div>' +
+            '<div class="shipment-photos">' +
+              (sh.truckPhoto ? '<img src="'+sh.truckPhoto+'" alt="صورة الترلة" class="shipment-thumb">' : '') +
+              (sh.invoicePhoto ? '<img src="'+sh.invoicePhoto+'" alt="صورة الفاتورة" class="shipment-thumb">' : '') +
+            '</div>' +
+          '</div>'
+        );
+      }).join('') + '</div>';
+      html += '<div class="sub-panel">' + body + '</div>';
+    }
+
+    if(panels.pumps){
+      var reads = pumpReadingsCache[st.id];
+      var body2;
+      if(!reads) body2 = '<div class="sub-panel-loading">جارِ التحميل...</div>';
+      else if(!reads.length) body2 = '<div class="sub-panel-empty">لا توجد قراءات عدادات مسجّلة بعد لهذه المحطة.</div>';
+      else {
+        var deltaMap = {}, lastByPump = {};
+        reads.slice().reverse().forEach(function(r){
+          if(lastByPump[r.pumpLabel] != null) deltaMap[r.id] = r.reading - lastByPump[r.pumpLabel];
+          lastByPump[r.pumpLabel] = r.reading;
+        });
+        body2 = '<div class="pump-log">' + reads.map(function(r){
+          var when = (r.createdAt && r.createdAt.toDate) ? r.createdAt.toDate().toLocaleString('ar-LY') : '—';
+          var delta = deltaMap[r.id];
+          return (
+            '<div class="pump-entry">' +
+              '<div class="pump-meta"><b>'+escapeHtml(r.pumpLabel||'')+'</b> — قراءة: <b>'+r.reading+'</b>' +
+              (delta != null ? ' — <span class="pump-delta">مُباع منذ آخر قراءة: '+delta+' لتر</span>' : '') +
+              ' — <span>'+when+'</span></div>' +
+              (r.photo ? '<img src="'+r.photo+'" alt="صورة العداد" class="shipment-thumb">' : '') +
+            '</div>'
+          );
+        }).join('') + '</div>';
+      }
+      html += '<div class="sub-panel">' + body2 + '</div>';
+    }
+
+    return html;
   }
 
   function recomputeStats(){
@@ -1222,6 +1440,103 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
       navigator.clipboard.writeText(url).then(function(){
         toast('تم نسخ رابط صاحب المحطة — أرسله لصاحب المحطة فقط');
       }).catch(function(){ toast('الرابط: ' + url); });
+    } else if(action === 'toggle-shipments'){
+      openPanels[stationId] = openPanels[stationId] || {};
+      openPanels[stationId].shipments = !openPanels[stationId].shipments;
+      if(openPanels[stationId].shipments && !shipmentsCache[stationId]) loadShipments(stationId);
+      render();
+    } else if(action === 'toggle-pumps'){
+      openPanels[stationId] = openPanels[stationId] || {};
+      openPanels[stationId].pumps = !openPanels[stationId].pumps;
+      if(openPanels[stationId].pumps && !pumpReadingsCache[stationId]) loadPumpReadings(stationId);
+      render();
+    } else if(action === 'new-shipment'){
+      openShipmentModal(stationId);
+    } else if(action === 'new-reading'){
+      openPumpReadingModal(stationId);
+    }
+  });
+
+  document.getElementById('stations-list').addEventListener('change', function(e){
+    var sel = e.target.closest('[data-station-action="set-supply-status"]');
+    if(!sel) return;
+    db.collection('stations').doc(sel.dataset.station).update({ supplyStatus: sel.value })
+      .catch(function(err){ toast('خطأ: ' + err.message); });
+  });
+
+  /* ---------------- نوافذ تسجيل الشحنات وقراءات العدادات ---------------- */
+  document.querySelectorAll('[data-modal-close]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.getElementById(btn.dataset.modalClose + '-modal').classList.remove('show');
+    });
+  });
+
+  document.getElementById('shipment-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var stationId = currentShipmentStation;
+    if(!stationId) return;
+    var truckCount = parseInt(document.getElementById('shipment-truck-count').value, 10) || 0;
+    var truckFile = document.getElementById('shipment-truck-photo').files[0];
+    var invoiceFile = document.getElementById('shipment-invoice-photo').files[0];
+    var submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true; submitBtn.textContent = 'جارِ الحفظ...';
+    Promise.all([
+      truckFile ? compressImage(truckFile, 900, 0.55) : Promise.resolve(null),
+      invoiceFile ? compressImage(invoiceFile, 900, 0.55) : Promise.resolve(null)
+    ]).then(function(results){
+      return db.collection('stations').doc(stationId).collection('shipments').add({
+        truckCount: truckCount, truckPhoto: results[0], invoicePhoto: results[1],
+        createdAt: FieldValue.serverTimestamp()
+      });
+    }).then(function(){
+      return db.collection('stations').doc(stationId).update({ supplyStatus: 'shipment' });
+    }).then(function(){
+      document.getElementById('shipment-modal').classList.remove('show');
+      delete shipmentsCache[stationId];
+      if(openPanels[stationId] && openPanels[stationId].shipments) loadShipments(stationId);
+      toast('تم تسجيل الطلبية ✅');
+    }).catch(function(err){
+      toast('تعذّر الحفظ: ' + err.message);
+    }).finally(function(){
+      submitBtn.disabled = false; submitBtn.textContent = 'حفظ الطلبية';
+    });
+  });
+
+  document.getElementById('pump-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var stationId = currentPumpStation;
+    if(!stationId) return;
+    var pumpLabel = document.getElementById('pump-label').value.trim();
+    var reading = parseFloat(document.getElementById('pump-reading').value);
+    var photoFile = document.getElementById('pump-photo').files[0];
+    if(!pumpLabel || isNaN(reading)) return;
+    var submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true; submitBtn.textContent = 'جارِ الحفظ...';
+    (photoFile ? compressImage(photoFile, 900, 0.55) : Promise.resolve(null)).then(function(photo){
+      return db.collection('stations').doc(stationId).collection('pumpReadings').add({
+        pumpLabel: pumpLabel, reading: reading, photo: photo, createdAt: FieldValue.serverTimestamp()
+      });
+    }).then(function(){
+      document.getElementById('pump-modal').classList.remove('show');
+      delete pumpReadingsCache[stationId];
+      if(openPanels[stationId] && openPanels[stationId].pumps) loadPumpReadings(stationId);
+      toast('تم حفظ القراءة ✅');
+    }).catch(function(err){
+      toast('تعذّر الحفظ: ' + err.message);
+    }).finally(function(){
+      submitBtn.disabled = false; submitBtn.textContent = 'حفظ القراءة';
+    });
+  });
+
+  document.addEventListener('click', function(e){
+    var thumb = e.target.closest('.shipment-thumb');
+    if(thumb){
+      document.getElementById('photo-lightbox-img').src = thumb.src;
+      document.getElementById('photo-lightbox').classList.add('show');
+      return;
+    }
+    if(e.target.id === 'photo-lightbox'){
+      document.getElementById('photo-lightbox').classList.remove('show');
     }
   });
 

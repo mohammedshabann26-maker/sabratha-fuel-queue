@@ -33,6 +33,18 @@ service cloud.firestore {
         allow read: if true;
         allow write: if true;
       }
+
+      // سجل الشحنات الواصلة للمحطة (عدد الترلات، صور الترلة والفاتورة) — لمنع التهريب
+      match /shipments/{shipmentId} {
+        allow read: if true;
+        allow write: if true;
+      }
+
+      // قراءات عدادات الطرمبات (المضخات) لحساب الكميات المباعة
+      match /pumpReadings/{readingId} {
+        allow read: if true;
+        allow write: if true;
+      }
     }
 
     // أي مسار آخر غير معرّف أعلاه: ممنوع تماماً
