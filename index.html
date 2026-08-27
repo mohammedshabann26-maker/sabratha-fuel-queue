@@ -32,7 +32,10 @@
     --danger:#B5402A;
     --danger-bg:#FBE7E1;
     --shadow: 0 18px 40px -20px rgba(20,30,25,.35);
+    --shadow-sm: 0 6px 16px -8px rgba(20,30,25,.28);
+    --shadow-lg: 0 28px 60px -24px rgba(20,30,25,.4);
     --radius: 16px;
+    --brand-gradient: linear-gradient(135deg, var(--accent), var(--accent-2));
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -40,6 +43,7 @@
       --line:#2B3A3D; --accent:#F0A63D; --accent-ink:#2A1804; --accent-2:#3FAEB2; --accent-2-ink:#06201F;
       --success:#49B57C; --success-bg:#123024; --warning:#E8B23D; --warning-bg:#332405;
       --danger:#E2705A; --danger-bg:#391712; --shadow: 0 18px 40px -20px rgba(0,0,0,.6);
+      --shadow-sm: 0 6px 16px -8px rgba(0,0,0,.5); --shadow-lg: 0 28px 60px -24px rgba(0,0,0,.7);
     }
   }
   :root[data-theme="dark"]{
@@ -47,6 +51,7 @@
     --line:#2B3A3D; --accent:#F0A63D; --accent-ink:#2A1804; --accent-2:#3FAEB2; --accent-2-ink:#06201F;
     --success:#49B57C; --success-bg:#123024; --warning:#E8B23D; --warning-bg:#332405;
     --danger:#E2705A; --danger-bg:#391712; --shadow: 0 18px 40px -20px rgba(0,0,0,.6);
+    --shadow-sm: 0 6px 16px -8px rgba(0,0,0,.5); --shadow-lg: 0 28px 60px -24px rgba(0,0,0,.7);
   }
 
   *{box-sizing:border-box;}
@@ -65,32 +70,37 @@
 
   .topbar{
     position:sticky;top:0;z-index:40;
-    background:color-mix(in srgb, var(--bg) 88%, transparent);
-    backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+    background:color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter:blur(14px) saturate(1.4);border-bottom:1px solid var(--line);
   }
   .topbar-inner{
     max-width:1080px;margin:0 auto;padding:12px 20px;
     display:flex;align-items:center;justify-content:space-between;gap:12px;
   }
-  .brand{display:flex;align-items:center;gap:10px;}
+  .brand{display:flex;align-items:center;gap:11px;}
   .brand-mark{
-    width:38px;height:38px;border-radius:11px;background:linear-gradient(155deg,var(--accent),#a85e14);
-    display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);flex:none;
+    width:40px;height:40px;border-radius:12px;background:var(--brand-gradient);position:relative;
+    display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.35);flex:none;
   }
-  .brand-mark svg{width:20px;height:20px;}
+  .brand-mark::after{
+    content:"";position:absolute;inset:0;border-radius:inherit;
+    background:linear-gradient(155deg, rgba(255,255,255,.28), transparent 55%);pointer-events:none;
+  }
+  .brand-mark svg{width:21px;height:21px;position:relative;}
   .brand-text{display:flex;flex-direction:column;line-height:1.2;}
-  .brand-text b{font-family:'Cairo';font-size:16px;font-weight:800;}
-  .brand-text span{font-size:11px;color:var(--ink-dim);}
+  .brand-text b{font-family:'Cairo';font-size:16.5px;font-weight:800;letter-spacing:-.01em;}
+  .brand-text span{font-size:11px;color:var(--ink-dim);font-weight:600;}
 
   .cs-badge{
-    display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);
-    padding:6px 12px 6px 6px;border-radius:999px;cursor:pointer;transition:.15s;text-decoration:none;color:var(--ink);
+    display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:var(--surface);
+    padding:5px 14px 5px 6px;border-radius:999px;cursor:pointer;transition:.18s ease;text-decoration:none;color:var(--ink);
+    box-shadow:var(--shadow-sm);
   }
-  .cs-badge:hover{border-color:var(--accent);}
+  .cs-badge:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow);}
   .cs-mono{
-    width:26px;height:26px;border-radius:8px;background:linear-gradient(155deg,var(--accent-2),#0c3a3f);
-    color:var(--accent-2-ink);display:flex;align-items:center;justify-content:center;
-    font-family:'Cairo';font-weight:800;font-size:11.5px;flex:none;
+    width:28px;height:28px;border-radius:9px;background:var(--brand-gradient);position:relative;overflow:hidden;
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    font-family:'Cairo';font-weight:800;font-size:11.5px;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
   }
   .cs-badge-text{display:flex;flex-direction:column;line-height:1.15;}
   .cs-badge-text b{font-family:'Cairo';font-size:11.5px;font-weight:800;}
@@ -117,10 +127,12 @@
   #app[data-local-route="security"] .live-badge{display:none;}
   #app[data-local-route="security"][data-local-auth="security"] .live-badge{display:flex;}
 
-  .hero{padding:56px 0 40px;overflow:hidden;position:relative;}
+  .hero{padding:60px 0 44px;overflow:hidden;position:relative;}
   .hero::before{
-    content:"";position:absolute;inset:-20% -10% auto -10%;height:520px;z-index:-1;
-    background:radial-gradient(closest-side, color-mix(in srgb, var(--accent) 14%, transparent), transparent 72%);
+    content:"";position:absolute;inset:-20% -10% auto -10%;height:560px;z-index:-1;
+    background:
+      radial-gradient(closest-side at 30% 30%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+      radial-gradient(closest-side at 78% 15%, color-mix(in srgb, var(--accent-2) 13%, transparent), transparent 72%);
     pointer-events:none;
   }
   .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center;}
@@ -128,19 +140,30 @@
   .eyebrow{
     display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);
     padding:6px 14px;border-radius:999px;font-size:12.5px;color:var(--ink-dim);font-weight:700;margin-bottom:18px;
+    box-shadow:var(--shadow-sm);
   }
   .eyebrow b{color:var(--accent-2);}
-  .hero h1{font-size:clamp(28px,4.4vw,42px);font-weight:800;letter-spacing:-.01em;}
+  .hero h1{font-size:clamp(29px,4.6vw,44px);font-weight:800;letter-spacing:-.015em;line-height:1.18;}
   .hero h1 em{font-style:normal;color:var(--accent-2);}
   .hero p.lead{margin-top:16px;font-size:16.5px;color:var(--ink-dim);max-width:46ch;}
   .hero-actions{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap;}
   .btn{
     border:none;border-radius:12px;padding:13px 22px;font-weight:800;font-size:14.5px;
-    cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s transform,.15s box-shadow;
+    cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.18s ease;
   }
   .btn:active{transform:scale(.97);}
-  .btn-primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 12px 26px -12px rgba(217,129,44,.55);}
-  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line);}
+  .btn-primary{
+    background:var(--brand-gradient);color:#fff;box-shadow:0 14px 30px -12px color-mix(in srgb, var(--accent) 65%, transparent);
+  }
+  .btn-primary:hover{transform:translateY(-1.5px);box-shadow:0 18px 36px -12px color-mix(in srgb, var(--accent) 70%, transparent);}
+  .btn-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow-sm);}
+  .btn-ghost:hover{border-color:var(--accent-2);transform:translateY(-1.5px);box-shadow:var(--shadow);}
+
+  .trust-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;}
+  .trust-item{
+    display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--ink-dim);
+    background:var(--surface);border:1px solid var(--line);padding:7px 13px;border-radius:999px;
+  }
 
   .rule-banner{
     margin-top:28px;display:flex;gap:12px;align-items:flex-start;background:var(--danger-bg);
@@ -214,10 +237,15 @@
 
   .rules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
   @media (max-width:760px){.rules-grid{grid-template-columns:1fr;}}
-  .rule-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;}
+  .rule-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;
+    box-shadow:var(--shadow-sm);transition:.18s ease;
+  }
+  .rule-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:color-mix(in srgb, var(--accent-2) 30%, var(--line));}
   .rule-card .num{
-    width:30px;height:30px;border-radius:9px;background:var(--surface-2);display:flex;align-items:center;
-    justify-content:center;font-family:'Cairo';font-weight:800;color:var(--accent-2);margin-bottom:10px;font-size:13px;
+    width:32px;height:32px;border-radius:10px;background:var(--brand-gradient);display:flex;align-items:center;
+    justify-content:center;font-family:'Cairo';font-weight:800;color:#fff;margin-bottom:12px;font-size:13.5px;
+    box-shadow:var(--shadow-sm);
   }
   .rule-card h3{font-size:15px;margin-bottom:6px;}
   .rule-card p{font-size:13.5px;color:var(--ink-dim);margin:0;}
@@ -226,7 +254,7 @@
   .stats-row{display:flex;gap:10px;flex-wrap:wrap;}
   .stat-pill{
     background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 14px;
-    font-size:12.5px;color:var(--ink-dim);display:flex;gap:8px;align-items:baseline;
+    font-size:12.5px;color:var(--ink-dim);display:flex;gap:8px;align-items:baseline;box-shadow:var(--shadow-sm);
   }
   .stat-pill b{font-family:'Cairo';font-size:16px;color:var(--ink);}
 
@@ -255,19 +283,25 @@
   #app[data-local-route="security"][data-local-auth="security"] .security-below-lock{display:block;}
 
   .stations{display:grid;grid-template-columns:1fr;gap:18px;}
-  .station-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;}
+  .station-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);
+    overflow:hidden;position:relative;
+  }
+  .station-card::before{
+    content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--brand-gradient);
+  }
   .station-head{
-    display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 18px 16px;
     border-bottom:1px solid var(--line);flex-wrap:wrap;
   }
-  .station-title{display:flex;align-items:center;gap:10px;}
+  .station-title{display:flex;align-items:center;gap:11px;}
   .station-icon{
-    width:38px;height:38px;border-radius:10px;background:var(--accent-2);color:var(--accent-2-ink);
-    display:flex;align-items:center;justify-content:center;flex:none;
+    width:40px;height:40px;border-radius:11px;background:var(--brand-gradient);color:#fff;position:relative;
+    display:flex;align-items:center;justify-content:center;flex:none;box-shadow:var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.3);
   }
-  .station-name{font-family:'Cairo';font-weight:800;font-size:16px;}
+  .station-name{font-family:'Cairo';font-weight:800;font-size:16.5px;}
   .station-note{font-size:12px;color:var(--ink-dim);}
-  .station-status{font-size:12px;font-weight:800;padding:6px 12px;border-radius:999px;}
+  .station-status{font-size:12px;font-weight:800;padding:6px 13px;border-radius:999px;}
   .station-status[data-active="1"]{background:var(--success-bg);color:var(--success);}
   .station-status[data-active="0"]{background:var(--surface-2);color:var(--ink-dim);}
 
@@ -275,10 +309,16 @@
   .queue-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
   .queue-empty{font-size:13px;color:var(--ink-dim);text-align:center;padding:18px 0;border:1px dashed var(--line);border-radius:12px;}
   .queue-row{
-    display:grid;grid-template-columns:26px 1fr auto auto;align-items:center;gap:10px;
-    background:var(--surface-2);border-radius:12px;padding:9px 12px;
+    display:grid;grid-template-columns:26px auto 1fr auto auto;align-items:center;gap:10px;
+    background:var(--surface-2);border-radius:12px;padding:9px 12px;transition:.15s ease;
   }
+  .queue-row:hover{background:color-mix(in srgb, var(--surface-2) 70%, var(--line));}
   .queue-row .pos{font-family:'Cairo';font-weight:800;font-size:13px;color:var(--ink-dim);text-align:center;}
+  .queue-row .avatar{
+    width:30px;height:30px;border-radius:50%;background:color-mix(in srgb, var(--accent-2) 16%, var(--surface));
+    color:var(--accent-2);display:flex;align-items:center;justify-content:center;flex:none;
+    font-family:'Cairo';font-weight:800;font-size:13px;
+  }
   .queue-row .who{display:flex;flex-direction:column;gap:1px;min-width:0;}
   .queue-row .who .name{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .queue-row .who .plate{font-size:12px;color:var(--ink-dim);}
@@ -286,6 +326,16 @@
     font-size:10.5px;font-weight:800;color:var(--accent-2);background:color-mix(in srgb, var(--accent-2) 12%, transparent);
     padding:2px 7px;border-radius:999px;width:fit-content;margin-top:2px;
   }
+  .countdown-tag{
+    font-size:10px;font-weight:800;color:var(--warning);margin-top:3px;white-space:nowrap;
+  }
+  .wait-pill{
+    display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:var(--ink-dim);
+    background:var(--surface-2);border:1px solid var(--line);padding:5px 11px;border-radius:999px;margin-inline-start:8px;
+  }
+  .wait-pill b{color:var(--ink);font-family:'Cairo';}
+  .central-register-card{margin-bottom:18px;}
+  .central-register-card .register-form{border-top:none;padding-top:0;}
   .status-badge{font-size:11.5px;font-weight:800;padding:6px 10px;border-radius:999px;white-space:nowrap;}
   .status-badge[data-status="waiting"]{background:var(--warning-bg);color:var(--warning);}
   .status-badge[data-status="called"]{background:var(--accent-2);color:var(--accent-2-ink);}
@@ -295,9 +345,9 @@
   .row-actions{display:flex;gap:6px;}
   .icon-btn{
     width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:var(--surface);
-    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);transition:.15s ease;
   }
-  .icon-btn:hover{border-color:var(--accent-2);}
+  .icon-btn:hover{border-color:var(--accent-2);color:var(--accent-2);transform:translateY(-1px);}
   .icon-btn.danger:hover{border-color:var(--danger);color:var(--danger);}
 
   .register-form{display:grid;grid-template-columns:1.4fr 1fr auto;gap:8px;align-items:end;border-top:1px solid var(--line);padding-top:14px;}
@@ -318,10 +368,11 @@
   }
   .manage-btn{
     border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;
-    padding:8px 12px;font-size:12.5px;font-weight:700;cursor:pointer;
+    padding:8px 12px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s ease;
   }
+  .manage-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm);}
   .manage-btn.danger{color:var(--danger);border-color:color-mix(in srgb, var(--danger) 40%, var(--line));}
-  .manage-btn.primary{background:var(--accent-2);color:var(--accent-2-ink);border-color:var(--accent-2);}
+  .manage-btn.primary{background:var(--brand-gradient);color:#fff;border-color:transparent;}
 
   .stations-empty{text-align:center;padding:40px 20px;border:1px dashed var(--line);border-radius:20px;color:var(--ink-dim);}
 
@@ -330,29 +381,37 @@
     background:color-mix(in srgb, var(--surface-2) 55%, transparent);
   }
   .metric-pill{
-    display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--ink-dim);
-    background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 11px;
+    display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
+    border:1px solid transparent;border-radius:999px;padding:5px 12px;
   }
-  .metric-pill b{font-family:'Cairo';font-size:14px;color:var(--ink);font-weight:800;}
+  .metric-pill b{font-family:'Cairo';font-size:14px;font-weight:800;}
+  .metric-pill.mp-waiting{background:var(--warning-bg);color:color-mix(in srgb, var(--warning) 75%, var(--ink));}
   .metric-pill.mp-waiting b{color:var(--warning);}
+  .metric-pill.mp-called{background:color-mix(in srgb, var(--accent-2) 14%, var(--surface));color:var(--accent-2);}
   .metric-pill.mp-called b{color:var(--accent-2);}
+  .metric-pill.mp-served{background:var(--success-bg);color:color-mix(in srgb, var(--success) 75%, var(--ink));}
   .metric-pill.mp-served b{color:var(--success);}
+  .metric-pill.mp-transit{background:color-mix(in srgb, var(--accent) 14%, var(--surface));color:color-mix(in srgb, var(--accent) 80%, var(--ink));}
   .metric-pill.mp-transit b{color:var(--accent);}
 
   .reports-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
   .reports-panel{
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-    padding:18px;margin-bottom:18px;box-shadow:var(--shadow);
+    padding:18px;margin-bottom:18px;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;
   }
+  .reports-panel::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--brand-gradient);}
   .reports-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
-  .reports-panel-head h3{font-size:16px;}
+  .reports-panel-head h3{font-size:16px;font-family:'Cairo';}
   .reports-panel-head p{font-size:12.5px;color:var(--ink-dim);margin-top:4px;}
   .reports-table-wrap{overflow-x:auto;}
   .reports-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px;}
-  .reports-table th,.reports-table td{padding:9px 10px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap;}
-  .reports-table th{color:var(--ink-dim);font-weight:800;font-size:11.5px;}
+  .reports-table th,.reports-table td{padding:10px 10px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap;}
+  .reports-table th{color:var(--ink-dim);font-weight:800;font-size:11.5px;background:var(--surface-2);}
+  .reports-table th:first-child{border-top-right-radius:10px;}
+  .reports-table th:last-child{border-top-left-radius:10px;}
   .reports-table td:first-child,.reports-table th:first-child{text-align:right;}
-  .reports-table tbody tr:hover{background:var(--surface-2);}
+  .reports-table tbody tr:nth-child(even){background:color-mix(in srgb, var(--surface-2) 45%, transparent);}
+  .reports-table tbody tr:hover{background:color-mix(in srgb, var(--accent-2) 8%, var(--surface-2));}
   .reports-table tfoot td{font-weight:800;font-family:'Cairo';background:var(--surface-2);}
   .reports-status-tag{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:999px;}
   .reports-status-tag[data-active="1"]{background:var(--success-bg);color:var(--success);}
@@ -367,39 +426,55 @@
   }
 
   .gate-card{
-    background:var(--surface);border-radius:18px;padding:22px;max-width:340px;width:100%;
-    box-shadow:var(--shadow);border:1px solid var(--line);
+    background:var(--surface);border-radius:20px;padding:26px;max-width:340px;width:100%;
+    box-shadow:var(--shadow-lg);border:1px solid var(--line);position:relative;overflow:hidden;
   }
-  .gate-card h3{font-size:16px;margin-bottom:6px;}
-  .gate-card p{font-size:13px;color:var(--ink-dim);margin:0 0 14px;}
+  .gate-card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--brand-gradient);}
+  .gate-icon{
+    width:52px;height:52px;border-radius:15px;background:var(--brand-gradient);margin:0 auto 14px;
+    display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--shadow-sm);
+  }
+  .gate-card h3{font-size:16.5px;margin-bottom:6px;font-family:'Cairo';}
+  .gate-card p{font-size:13px;color:var(--ink-dim);margin:0 0 16px;}
   .gate-card input{
     width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);
-    border-radius:10px;padding:11px 12px;font-size:14px;margin-bottom:10px;font-family:inherit;
+    border-radius:11px;padding:12px 14px;font-size:14px;margin-bottom:12px;font-family:inherit;transition:.15s ease;
   }
+  .gate-card input:focus{outline:none;border-color:var(--accent-2);box-shadow:0 0 0 3px color-mix(in srgb, var(--accent-2) 20%, transparent);}
   .gate-error{color:var(--danger);font-size:12.5px;display:none;margin:-4px 0 8px;}
 
   .soon-card{
-    display:flex;align-items:center;gap:22px;background:linear-gradient(135deg,var(--accent-2),#0b3236);
-    color:var(--accent-2-ink);border-radius:22px;padding:28px 30px;box-shadow:var(--shadow);flex-wrap:wrap;
+    display:flex;align-items:center;gap:22px;background:linear-gradient(135deg,var(--accent-2) 0%,#0b3236 62%,color-mix(in srgb, var(--accent) 55%, #0b3236) 100%);
+    color:var(--accent-2-ink);border-radius:24px;padding:30px 32px;box-shadow:var(--shadow-lg);flex-wrap:wrap;
+    position:relative;overflow:hidden;
+  }
+  .soon-card::after{
+    content:"";position:absolute;inset:-40% -10% auto auto;width:280px;height:280px;border-radius:50%;
+    background:radial-gradient(closest-side, rgba(255,255,255,.14), transparent 70%);pointer-events:none;
   }
   .soon-mono{
-    width:66px;height:66px;border-radius:18px;background:rgba(255,255,255,.14);display:flex;
-    align-items:center;justify-content:center;font-family:'Cairo';font-weight:800;font-size:24px;
-    flex:none;border:1px solid rgba(255,255,255,.25);
+    width:68px;height:68px;border-radius:19px;background:rgba(255,255,255,.16);display:flex;
+    align-items:center;justify-content:center;font-family:'Cairo';font-weight:800;font-size:25px;
+    flex:none;border:1px solid rgba(255,255,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.25);position:relative;
   }
-  .soon-copy{flex:1;min-width:220px;}
-  .soon-kicker{font-size:12px;font-weight:800;opacity:.8;letter-spacing:.03em;margin-bottom:4px;}
-  .soon-copy h2{font-size:24px;color:inherit;}
-  .soon-copy p{font-size:13.5px;margin-top:8px;opacity:.92;max-width:60ch;}
+  .soon-copy{flex:1;min-width:220px;position:relative;}
+  .soon-kicker{font-size:12px;font-weight:800;opacity:.85;letter-spacing:.03em;margin-bottom:4px;}
+  .soon-copy h2{font-size:25px;color:inherit;font-family:'Cairo';}
+  .soon-copy p{font-size:13.5px;margin-top:8px;opacity:.94;max-width:60ch;line-height:1.7;}
   .soon-copy b{color:inherit;}
 
   footer{border-top:1px solid var(--line);padding:30px 0 40px;margin-top:20px;}
-  .footer-grid{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--ink-dim);}
+  .footer-grid{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--ink-dim);}
   .footer-grid b{color:var(--ink);}
+  .footer-brand{display:flex;align-items:center;gap:8px;}
+  .footer-mono{
+    width:22px;height:22px;border-radius:7px;background:var(--brand-gradient);color:#fff;flex:none;
+    display:flex;align-items:center;justify-content:center;font-family:'Cairo';font-weight:800;font-size:9.5px;
+  }
   .toast{
     position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
     background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:999px;
-    font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:90;
+    font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:90;box-shadow:var(--shadow-lg);
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
@@ -442,8 +517,9 @@
   </div>
 
   <div class="locked-screen">
-    <div class="gate-card" style="max-width:360px;">
-      <h3>🛡️ لوحة تحكم مديرية الأمن</h3>
+    <div class="gate-card" style="max-width:360px;text-align:center;">
+      <div class="gate-icon">🛡️</div>
+      <h3>لوحة تحكم مديرية الأمن</h3>
       <p>هذه الصفحة خاصة بأعضاء اللجنة المسؤولين عن متابعة قوائم التعبئة في صبراتة. الرجاء إدخال الرمز الخاص للمتابعة.</p>
       <div class="gate-error" id="gate-error-locked">الرمز غير صحيح، حاول مجدداً.</div>
       <input type="password" id="gate-input-locked" placeholder="أدخل رمز مديرية الأمن">
@@ -466,6 +542,12 @@
             سجّل اسمك في القائمة
           </a>
           <a href="#rules" class="btn btn-ghost">القواعد بالتفصيل</a>
+        </div>
+        <div class="trust-row">
+          <span class="trust-item">🛡️ بإشراف مديرية الأمن</span>
+          <span class="trust-item">⚡ تحديث لحظي للقوائم</span>
+          <span class="trust-item">🎯 توزيع تلقائي عادل</span>
+          <span class="trust-item">🆓 مجاني بالكامل</span>
         </div>
         <div class="rule-banner">
           <span>⛔</span>
@@ -503,8 +585,8 @@
       </div>
       <div class="rules-grid">
         <div class="rule-card"><div class="num">١</div><h3>وصول الطلبية</h3><p>عند وصول شحنة وقود إلى محطة في صبراتة، يُعلن عنها هنا وفي غرف الواتساب المخصصة.</p></div>
-        <div class="rule-card"><div class="num">٢</div><h3>التسجيل بالاسم واللوحة</h3><p>يرسل السائق اسمه ورقم لوحة سيارته ليُدرج ضمن قائمة الانتظار الخاصة بتلك المحطة.</p></div>
-        <div class="rule-card"><div class="num">٣</div><h3>الاختيار والاستدعاء</h3><p>تقوم اللجنة باختيار الآليات حسب ترتيب القائمة ويتم استدعاؤها تباعاً للتوجه للتعبئة.</p></div>
+        <div class="rule-card"><div class="num">٢</div><h3>التسجيل بالاسم واللوحة</h3><p>يرسل السائق اسمه ورقم لوحة سيارته مرة واحدة فقط، والنظام يوزّعه تلقائياً على أخف محطة ازدحاماً حالياً — بدون اختيار يدوي للمحطة.</p></div>
+        <div class="rule-card"><div class="num">٣</div><h3>الاستدعاء والمهلة</h3><p>تستدعيك اللجنة في دورك، ولديك 15 دقيقة للحضور بعد الاستدعاء — وإلا يُلغى دورك تلقائياً وينتقل لمن بعدك.</p></div>
         <div class="rule-card"><div class="num">٤</div><h3>عدالة وشفافية</h3><p>الهدف ضمان العدالة بين الجميع وتفادي التفرقة أو المحسوبية في التعبئة.</p></div>
         <div class="rule-card"><div class="num">٥</div><h3>لا طوابير ولا مبيت</h3><p>يُمنع بقاء السيارات في طابور أمام المحطة أو مبيتها هناك انتظاراً لدورها.</p></div>
         <div class="rule-card"><div class="num">٦</div><h3>حق عابر السبيل</h3><p>القادم من خارج المدينة (عابر سبيل) له حقه المحفوظ في التعبئة، بالتنسيق مع اللجنة.</p></div>
@@ -517,7 +599,21 @@
       <div class="section-head" id="stations-section-head">
         <div class="kicker">القوائم الحيّة</div>
         <h2>المحطات وقوائم الانتظار</h2>
-        <p>القوائم أدناه محدّثة لحظياً ومشتركة بين جميع من يفتح الرابط — اختر محطتك وسجّل بياناتك.</p>
+        <p>القوائم أدناه محدّثة لحظياً ومشتركة بين جميع من يفتح الرابط. سجّل بياناتك مرة واحدة أدناه، والنظام يوزّعك تلقائياً على أخف محطة ازدحاماً.</p>
+      </div>
+
+      <div class="central-register-card reports-panel public-route-only" id="central-register">
+        <div class="section-head" style="margin-bottom:12px;">
+          <div class="kicker">سجّل دورك الآن</div>
+          <h2>توزيع تلقائي وعادل — بدون اختيار يدوي للمحطة</h2>
+          <p>أدخل اسمك ورقم لوحتك فقط، والنظام يختار لك أخف محطة ازدحاماً من بين المحطات النشطة تلقائياً.</p>
+        </div>
+        <form class="register-form" id="central-register-form">
+          <div class="field"><label>الاسم الثلاثي (إجباري)</label><input type="text" id="central-input-name" placeholder="مثال: محمد علي أحمد" required></div>
+          <div class="field"><label>رقم لوحة السيارة</label><input type="text" id="central-input-plate" placeholder="مثال: صبراتة 1234" required></div>
+          <button type="submit" class="btn btn-primary">سجّل دوري تلقائياً</button>
+          <label class="transit-check"><input type="checkbox" id="central-input-transit"> أنا عابر سبيل (قادم من خارج صبراتة)</label>
+        </form>
       </div>
 
       <div class="security-chrome" id="security-header">
@@ -614,7 +710,7 @@
   <footer class="public-route-only">
     <div class="wrap footer-grid">
       <div>مبادرة خير لأهل <b>صبراتة</b> — بإشراف اللجنة الأمنية المختصة</div>
-      <div>فكرة وتطوير: <b>سيتي شوب</b></div>
+      <div class="footer-brand"><span class="footer-mono">CS</span> فكرة وتطوير: <b>سيتي شوب</b></div>
     </div>
   </footer>
 
@@ -736,7 +832,11 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
   var queues = {};             // {stationId: [{id, name, plate, transit, status, createdAt}]}
   var queueUnsubs = {};        // {stationId: unsubscribeFn}
 
-  function statusLabel(s){
+  /* مهلة الحضور بعد الاستدعاء — بعدها يُلغى الدور تلقائياً وينتقل لمن بعده */
+  var TIMEOUT_MS = 15 * 60 * 1000;
+
+  function statusLabel(s, reason){
+    if(s === 'cancelled' && reason === 'timeout') return 'انتهت المهلة';
     return {waiting:'في الانتظار', called:'الرجاء التوجه الآن', done:'تمت التعبئة', cancelled:'ملغى'}[s] || s;
   }
 
@@ -763,15 +863,26 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' +
         '</div>';
     }
+    var initial = (entry.name || '').trim().charAt(0) || '؟';
+    var countdownHtml = '';
+    if(entry.status === 'called' && entry.calledAt && entry.calledAt.toMillis){
+      var elapsed = Date.now() - entry.calledAt.toMillis();
+      var remainMin = Math.ceil((TIMEOUT_MS - elapsed) / 60000);
+      countdownHtml = '<div class="countdown-tag">⏳ ' + (remainMin > 0 ? ('متبقي نحو ' + remainMin + ' د') : 'ستُلغى قريباً') + '</div>';
+    }
     return (
       '<div class="queue-row" data-status="'+entry.status+'">' +
         '<div class="pos">'+posLabel+'</div>' +
+        '<div class="avatar">'+escapeHtml(initial)+'</div>' +
         '<div class="who">' +
           '<div class="name">'+escapeHtml(entry.name)+'</div>' +
           '<div class="plate">'+escapeHtml(entry.plate)+'</div>' +
           (entry.transit ? '<div class="transit-tag">عابر سبيل</div>' : '') +
         '</div>' +
-        '<span class="status-badge" data-status="'+entry.status+'">'+statusLabel(entry.status)+'</span>' +
+        '<div>' +
+          '<span class="status-badge" data-status="'+entry.status+'">'+statusLabel(entry.status, entry.cancelReason)+'</span>' +
+          countdownHtml +
+        '</div>' +
         actionsHtml +
       '</div>'
     );
@@ -810,14 +921,7 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
       return renderRow(st.id, e, posLabel, isSecurity);
     }).join('') : '<div class="queue-empty">لا يوجد أحد في القائمة الآن — كن أول المسجّلين</div>';
 
-    var registerHtml = isOwner ? '' : (
-      '<form class="register-form" data-role="register-form" data-station="'+st.id+'">' +
-        '<div class="field"><label>الاسم الكامل</label><input type="text" data-role="input-name" placeholder="اسمك الثلاثي" required></div>' +
-        '<div class="field"><label>رقم لوحة السيارة</label><input type="text" data-role="input-plate" placeholder="مثال: صبراتة 1234" required></div>' +
-        '<button type="submit" class="btn btn-primary">سجّل دوري</button>' +
-        '<label class="transit-check"><input type="checkbox" data-role="input-transit"> أنا عابر سبيل (قادم من خارج صبراتة)</label>' +
-      '</form>'
-    );
+    var registerHtml = '';
 
     var manageHtml = isSecurity ? (
       '<div class="station-manage">' +
@@ -838,6 +942,7 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
             '<div><div class="station-name">'+escapeHtml(st.name)+'</div><div class="station-note">'+escapeHtml(st.note||'')+'</div></div>' +
           '</div>' +
           '<span class="station-status" data-active="'+(st.active ? 1:0)+'">'+(st.active ? 'استقبال طلبات نشط' : 'استقبال متوقف مؤقتاً')+'</span>' +
+          ((!isSecurity && !isOwner) ? '<span class="wait-pill">🕒 قيد الانتظار <b>'+stationLiveCounts(st.id).waiting+'</b></span>' : '') +
         '</div>' +
         metricsHtml +
         '<div class="station-body"><div class="queue-list">'+rowsHtml+'</div>'+registerHtml+'</div>' +
@@ -958,34 +1063,82 @@ const SECURITY_PIN = "AFUMHBMK2BUW";
     });
   }
 
-  /* ---------------- actions: delegated click/submit ---------------- */
-  document.getElementById('stations-list').addEventListener('submit', function(e){
-    var form = e.target.closest('[data-role="register-form"]');
-    if(!form) return;
-    e.preventDefault();
-    var stationId = form.dataset.station;
-    var name = form.querySelector('[data-role="input-name"]').value.trim();
-    var plate = form.querySelector('[data-role="input-plate"]').value.trim();
-    var transit = form.querySelector('[data-role="input-transit"]').checked;
-    if(!name || !plate) return;
-    db.collection('stations').doc(stationId).collection('queue').add({
-      name: name, plate: plate, transit: transit, status: 'waiting',
-      createdAt: FieldValue.serverTimestamp()
-    }).then(function(){
-      var counterUpdate = { totalRegistered: FieldValue.increment(1) };
-      if(transit) counterUpdate.totalTransit = FieldValue.increment(1);
-      db.collection('stations').doc(stationId).update(counterUpdate);
-      var st = stations.find(function(s){ return s.id === stationId; });
-      toast('تم تسجيلك في قائمة ' + (st ? st.name : '') + ' ✅');
-    }).catch(function(err){ toast('تعذّر التسجيل: ' + err.message); });
-  });
+  /* ---------------- التسجيل المركزي: توزيع تلقائي على أخف محطة ازدحاماً ---------------- */
+  var centralForm = document.getElementById('central-register-form');
+  if(centralForm){
+    centralForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      var nameInput = document.getElementById('central-input-name');
+      var plateInput = document.getElementById('central-input-plate');
+      var transitInput = document.getElementById('central-input-transit');
+      var name = nameInput.value.trim();
+      var plate = plateInput.value.trim();
+      var transit = transitInput.checked;
+      if(!name || !plate) return;
+
+      var nameParts = name.split(/\s+/).filter(Boolean);
+      if(nameParts.length < 3){
+        toast('الرجاء كتابة الاسم الثلاثي كاملاً (مثال: محمد علي أحمد) — لا يُقبل اسم ثنائي');
+        nameInput.focus();
+        return;
+      }
+
+      var activeStations = stations.filter(function(s){ return s.active; });
+      if(!activeStations.length){
+        toast('لا توجد محطات تستقبل طلبات حالياً — تابع إعلانات اللجنة');
+        return;
+      }
+      var chosen = null, chosenLoad = Infinity;
+      activeStations.forEach(function(s){
+        var c = stationLiveCounts(s.id);
+        var load = c.waiting + c.called;
+        if(load < chosenLoad){ chosenLoad = load; chosen = s; }
+      });
+
+      db.collection('stations').doc(chosen.id).collection('queue').add({
+        name: name, plate: plate, transit: transit, status: 'waiting',
+        createdAt: FieldValue.serverTimestamp()
+      }).then(function(){
+        var counterUpdate = { totalRegistered: FieldValue.increment(1) };
+        if(transit) counterUpdate.totalTransit = FieldValue.increment(1);
+        db.collection('stations').doc(chosen.id).update(counterUpdate);
+        nameInput.value = ''; plateInput.value = ''; transitInput.checked = false;
+        toast('تم تسجيلك تلقائياً في محطة «' + chosen.name + '» ✅ تابع اسمك في القائمة أدناه');
+      }).catch(function(err){ toast('تعذّر التسجيل: ' + err.message); });
+    });
+  }
+
+  /* ---------------- إلغاء تلقائي بعد انتهاء مهلة الحضور ---------------- */
+  var expiringInProgress = {};
+  function checkExpiries(){
+    Object.keys(queues).forEach(function(stationId){
+      (queues[stationId] || []).forEach(function(entry){
+        if(entry.status !== 'called' || !entry.calledAt || !entry.calledAt.toMillis) return;
+        if((Date.now() - entry.calledAt.toMillis()) < TIMEOUT_MS) return;
+        var key = stationId + '/' + entry.id;
+        if(expiringInProgress[key]) return;
+        expiringInProgress[key] = true;
+        db.collection('stations').doc(stationId).collection('queue').doc(entry.id)
+          .update({ status: 'cancelled', cancelReason: 'timeout' })
+          .then(function(){
+            db.collection('stations').doc(stationId).update({ totalCancelled: FieldValue.increment(1) });
+          })
+          .catch(function(){})
+          .then(function(){ delete expiringInProgress[key]; });
+      });
+    });
+  }
+  setInterval(function(){ checkExpiries(); render(); }, 20000);
 
   document.getElementById('stations-list').addEventListener('click', function(e){
     var rowBtn = e.target.closest('[data-row-action]');
     if(rowBtn){
       var status = {call:'called', done:'done', cancel:'cancelled'}[rowBtn.dataset.rowAction];
+      var rowUpdate = { status: status };
+      if(status === 'called') rowUpdate.calledAt = FieldValue.serverTimestamp();
+      if(status === 'cancelled') rowUpdate.cancelReason = 'manual';
       db.collection('stations').doc(rowBtn.dataset.station).collection('queue').doc(rowBtn.dataset.entry)
-        .update({status: status}).catch(function(err){ toast('خطأ: ' + err.message); });
+        .update(rowUpdate).catch(function(err){ toast('خطأ: ' + err.message); });
       if(status === 'done'){
         db.collection('stations').doc(rowBtn.dataset.station).update({ totalServed: FieldValue.increment(1) });
       } else if(status === 'cancelled'){
